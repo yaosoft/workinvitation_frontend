@@ -43,14 +43,27 @@ export const ProjectProvider = ({ children }) => {
 		}
 	}
 	
-	const getCategories = async () => {
-		const productApiURL		= 'http://localhost/diamta/projects/public/index.php/api/categories/list';
+	// get project categories
+	const getCategory = async () => {
+		const url		= 'http://localhost/diamta/projects/public/index.php/api/category/list';
 		const data 		= {};
 		const method	= 'GET';
 		
-		const categories = await fetchData( productApiURL, data, method );
+		const categories = await fetchData( url, data, method );
 
 		return categories;
+		
+	}
+
+	// get project categories
+	const getType = async () => {
+		const url		= 'http://localhost/diamta/projects/public/index.php/api/type/list';
+		const data 		= {};
+		const method	= 'GET';
+		
+		const types = await fetchData( url, data, method );
+
+		return types;
 		
 	}
 
@@ -58,7 +71,8 @@ export const ProjectProvider = ({ children }) => {
 	
 		<ProjectContext.Provider 
 			value={{ 
-				getCategories,
+				getCategory,
+				getType,
 			}}
 		>
 		

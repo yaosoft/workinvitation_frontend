@@ -104,7 +104,7 @@ const ModalAddContact = ( params ) => {
 	return (
 		<>
 			<div class="bootstrap-modal">
-				<div class="modal fade" id="contactAddModal" tabindex="-1" role="dialog" aria-labelledby="contactAddModalLabel" aria-hidden="true">
+				<div class="modal fade" style={{ zIndex: 5 }} id="contactAddModal" tabindex="-1" role="dialog" aria-labelledby="contactAddModalLabel" aria-hidden="true">
 					<div class="modal-dialog" role="document">
 						<div class="modal-content">
 							<div class="modal-header">
