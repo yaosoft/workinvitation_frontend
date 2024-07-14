@@ -1,0 +1,11 @@
+.nk-sidebar {
+	height: 88%;
+}
+
+.nk-sidebar .metismenu a:hover, .nk-sidebar .metismenu a:active, .nk-sidebar .metismenu a.active {
+    background-color: #fff;
+}
+
+.nk-sidebar {
+    z-index: 1;
+}
