@@ -218,11 +218,11 @@ const Header = ( params ) => {
 												</li>
 												<hr className="my-2" />
 												<li>
-													{ getUser().userEmail }
+													{ isAuthenticated() ? getUser().userEmail : '' }
 												</li>
 												<li>
 													<Link onClick={ e => handleClickLogInOut( e ) }>
-														<i className="icon-key"></i> <span>{ isAuthenticated ? 'Logout' : 'Login' }</span>
+														<i className="icon-key"></i> <span>{ isAuthenticated() ? 'Logout' : 'Login' }</span>
 													</Link>
 												</li>
 											</ul>

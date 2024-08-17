@@ -42,10 +42,12 @@ export const ProjectProvider = ({ children }) => {
 
 		}
 	}
+
+	const base_api_url		= 'http://localhost/diamta/projects/public/index.php/api/'; // http://localhost/diamta/projects/public/index.php/api/
 	
 	// get project categories
 	const getCategory = async () => {
-		const url		= 'http://localhost/diamta/projects/public/index.php/api/category/list';
+		const url		= 'base_api_url + category/list';
 		const data 		= {};
 		const method	= 'GET';
 		
@@ -55,9 +57,107 @@ export const ProjectProvider = ({ children }) => {
 		
 	}
 
-	// get project categories
+	// get sent projects
+	const getSentProjects = async ( userId ) => {
+		const url		= 'base_api_url + project/sent/?userId=' + userId;
+		const data 		= {};
+		const method	= 'GET';
+		
+		const projects = await fetchData( url, data, method );
+
+		return projects;
+
+	}
+
+	// get saved project
+	const getSavedProjects =  async ( userId ) => {
+		const url		= 'base_api_url + project/saved/?userId=' + userId;
+		const data 		= {};
+		const method	= 'GET';
+
+		const projects = await fetchData( url, data, method );
+		
+		return projects;
+
+	}
+
+	// get received project
+	const getReceivedProjects =  async ( userId ) => {
+		const url		= 'base_api_url + project/received/?userId=' + userId;
+		const data 		= {};
+		const method	= 'GET';
+
+		const projects = await fetchData( url, data, method );
+		
+		return projects;
+
+	}
+
+	// get sent projects
+	const getProject = async ( projectId ) => {
+
+		const url		= 'base_api_url + project/getProject/?projectId=' + projectId;
+		const data 		= {};
+		const method	= 'GET';
+		
+		const projects = await fetchData( url, data, method );
+
+		return projects;
+
+	}
+
+	// check is the user id the project owner
+	const isOwner = async ( userId, projectId ) => {
+		const url		= 'base_api_url + project/isOwner/?projectId=' + projectId + '&userId=' + userId;
+		const data 		= {};
+		const method	= 'GET';
+		
+		const resp = await fetchData( url, data, method );
+
+		return resp;
+	}
+
+	// check is the user id the project owner
+	const getProjectStatus = async ( projectId ) => {
+		const url		= 'base_api_url + project/getStatus/?projectId=' + projectId;
+		const data 		= {};
+		const method	= 'GET';
+		
+		const resp = await fetchData( url, data, method );
+
+		return resp;
+	}
+
+
+	// get sent invitation
+	const getSentInvitations = async ( userId ) => {
+
+		const url		= 'base_api_url + all/invitations/?userId=' + userId;
+		const data 		= {};
+		const method	= 'GET';
+		
+		const invitations = await fetchData( url, data, method );
+
+		return invitations;
+
+	}
+
+	// get a project invitation
+	const getProjectInvitations = async ( userId, projectId ) => {
+
+		const url		= 'base_api_url + project/invitations/?userId=' + userId + '&projectId=' + projectId;
+		const data 		= {};
+		const method	= 'GET';
+		
+		const invitations = await fetchData( url, data, method );
+
+		return invitations;
+
+	}
+
+	// get project types
 	const getType = async () => {
-		const url		= 'http://localhost/diamta/projects/public/index.php/api/type/list';
+		const url		= 'base_api_url + type/list';
 		const data 		= {};
 		const method	= 'GET';
 		
@@ -67,12 +167,63 @@ export const ProjectProvider = ({ children }) => {
 		
 	}
 
+	// get project duration
+	const getDuration = async () => {
+		const url		= 'base_api_url + duration/list';
+		const data 		= {};
+		const method	= 'GET';
+		
+		const durations = await fetchData( url, data, method );
+
+		return durations;
+		
+	}
+
+	// post a project with files
+	const postProject = async ( dataObj, fileList ) => {
+		const formData = new FormData();
+		// Append files
+		fileList.forEach( ( file ) => {
+			formData.append('files[]', file.originFileObj)
+		});
+
+		// Append data
+		for ( var key in dataObj ) 
+			formData.append(key, dataObj[key]);
+
+
+// for (var key of formData.entries()) {
+	// console.log( 'key0 --> ' + key[0] + ', key1 --> ' + key[1]);
+// }
+		// You can use any AJAX library you like
+		const resp = await fetch( 'base_api_url + project/save', {
+			method: 'POST',
+			body: formData,
+		})
+		
+		
+		return resp.json();
+	};
+
+	const backendServer = 'http://localhost/diamta/projects/public';
+
 	return (	
 	
 		<ProjectContext.Provider 
 			value={{ 
 				getCategory,
 				getType,
+				getDuration,
+				postProject,
+				getProject,
+				getSentProjects,
+				getSavedProjects,
+				getReceivedProjects,
+				getSentInvitations,
+				getProjectInvitations,
+				isOwner,
+				getProjectStatus,
+				backendServer
 			}}
 		>
 		

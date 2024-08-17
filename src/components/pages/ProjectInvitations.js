@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
+import { useNavigate, Link, useLocation  } from 'react-router-dom';
 import Header from '../Header';
 import Footer from '../Footer';
 import Sidebar from '../Sidebar';
@@ -11,7 +11,7 @@ import { AuthContext } from '../../context/AuthProvider';
 
 import '../../sidebarOverrides.css';
 
-const SentProjects = ( params ) => {
+const ProjectInvitations = ( params ) => {
 	
 	const { getUser } = useContext( AuthContext );
 	const { getSentProjects, getSentInvitations } = useContext( ProjectContext );
@@ -25,23 +25,24 @@ const SentProjects = ( params ) => {
 	const [ invitationList, setInvitationList ] = useState( [] );
 	const [ countInvitation, setCountInvitation ] = useState( 0 );
 
+
 	// Build contacts
 	const BuildProjectList = () => {
 		return(
 			projectList.map( ( project, key ) =>
 				<div className="message">
-                    <Link to={ "/project/view/?projectId=" + project.id }>
-                        <div className="col-mail col-mail-1">
-                            <div className="email-checkbox">
-                                <input type="checkbox" id="chk21" />
-                                <label className="toggle" for="chk21"></label>
-                            </div><span className="star-toggle ti-star"></span>
-                        </div>
-                        <div className="col-mail col-mail-2">
-                            <div className="subject">{ project.title }</div>
-                            <div className="date">{ project.date }</div>
-                        </div>
-                    </Link>
+                                            <Link to={ "/sent/edit/" + project.id }>
+                                                <div className="col-mail col-mail-1">
+                                                    <div className="email-checkbox">
+                                                        <input type="checkbox" id="chk21" />
+                                                        <label className="toggle" for="chk21"></label>
+                                                    </div><span className="star-toggle ti-star"></span>
+                                                </div>
+                                                <div className="col-mail col-mail-2">
+                                                    <div className="subject">{ project.title }</div>
+                                                    <div className="date">{ project.date }</div>
+                                                </div>
+                                            </Link>
 				</div>
 			)
 		)
@@ -129,4 +130,4 @@ console.log( 'list', list );
 	);
 };
 
-export default SentProjects;
+export default ProjectInvitations;

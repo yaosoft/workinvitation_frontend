@@ -31,9 +31,10 @@ export const AuthProvider = ({ children }) => {
 	
 	// login
 	const logIn = ( user ) => {
+
 		setUser( user )
 	}
-	
+
 	// get the user
 	const getUser = () => {
 		return user
@@ -41,7 +42,6 @@ export const AuthProvider = ({ children }) => {
 	
 	// delete the user
 	const logOut = async() => {
-console.log( 'getUser', getUser() );
 		// logout on the backend
 		// const logoutApiURL 	= 'http://localhost/diamta/projects/public/index.php/api/user/logout';
 		// const method = 'POST';
@@ -66,7 +66,7 @@ console.log( 'getUser', getUser() );
 	
 	// is authentificated
 	const isAuthenticated = () => {
-		return getUser() != null && getUser().accessToken != null ? true : false
+		return getUser() != null && getUser().userId != null ? true : false
 	}
 	
 	// check password validation
@@ -94,7 +94,7 @@ console.log( 'getUser', getUser() );
 		}
 	}, []); // 
 
-	useEffect (() => {
+	useEffect (() => {	
 		localStorage.setItem( 'user', JSON.stringify( user ) );
 	}, [user]); // 
 	

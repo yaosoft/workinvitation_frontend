@@ -1,18 +1,162 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useNavigate, Link, useLocation, useParams } from 'react-router-dom';
+import { useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
 import Header from '../Header';
 import Footer from '../Footer';
 import Sidebar from '../Sidebar';
 import Breadcrumbs from '../Breadcrumbs';
+import { AuthContext } from '../../context/AuthProvider';
+import { ProjectContext } from '../../context/Project';
+import moment from 'moment/min/moment-with-locales';
+import Moment from 'react-moment';
+import { Modal } from 'react-responsive-modal';
+import 'react-responsive-modal/styles.css';
+import ModalViewProject from '../ModalViewProject';
 
 import '../../sidebarOverrides.css';
 import '../../chatStyles.css';
 
 const Project = ( params ) => {
-	let { id } = useParams();
-// console.log( params );
+	
+	// Sets the moment instance to use.
+	Moment.globalMoment = moment;
+	// Set the locale for every react-moment instance to French.
+	// Moment.globalLocale = 'fr';
+	
+	// get the project id
+	const [ searchParams, setSearchParams ] = useSearchParams();
+	const [ projectId, setProjectId ] = useState( '' );
+	const pageType = projectId ? 'new' : 'edit';
+
+	// get the project obj
+	const [ project, setProject ] = useState( {} );
+
+	// invitation
+	const [ invitationList, setInvitationList ] = useState( [] ); 
+	const [ countInvitation, setCountInvitation ] = useState( 0 );
+	const [ invitS, setInvitS ] = useState( '' );
+
+	const [ projectInvitation, setProjectInvitation ] = useState( [] );
+	const [ countProjectInvitation, setCountProjectInvitation ] = useState( 0 );
+	const [ projectInvitS, setProjectInvitS ] = useState( '' );
+
+	// project user Status
+	const [ projectStatus, setProjectStatus ] = useState( [] );
+
+	// check if user is owner
+	const { getUser }	= useContext( AuthContext );
+	const [ userId, setUserId ] = useState( '' );
+
+	const { isOwner, getProject, getSentInvitations, getProjectStatus, getProjectInvitations }	= useContext( ProjectContext );
+	const [ isProjectOwner, setIsProjectOwner ] = useState( '' );
+
+	// project view
+	const handleClickViewProject = () => {
+		setOpenProjectModalView( true )
+	}
+
+	// Modal
+	const [ openProjectModalView, setOpenProjectModalView ] = useState(false);
+	const onOpenProjectModalView  		= () => setOpenProjectModalView(true);
+	const onCloseOpenProjectModalView 	= async () => {
+		setOpenProjectModalView(false)
+	};
+
+	// page title
+	const BuildPageTitle = () => {
+		return (
+			<>
+				<span>{ project.title }</span>&nbsp;
+				<button onClick={ handleClickViewProject }>
+					<i className='fa fa-eye'></i>
+				</button>&nbsp;
+				{
+					isProjectOwner && 
+					<Link 
+						to	 	= { '/project/edit/?projectId=' + projectId }
+						title 	= { 'Edit the project' }
+					>
+						<button>
+							<i className='fa fa-pencil'></i>
+						</button>
+					</Link>
+				}
+			</>
+		)
+	}
+	
+	// build invitation 
+	
+	const BuildInvitationsLine  = () => {
+		return( 
+			projectInvitation.map ( ( invitation, index ) =>
+				<tr key = { index }>
+					<td>{ invitation.receiverEmail }</td>
+					<td>{ invitation.receiverName ? invitation.receiverName : 'No name' }</td>
+					<td><i className="fa fa-circle-o text-success  mr-2"></i></td>
+					<td>
+						<span className="m-0 pl-3">{ invitation.attempts }</span>
+					</td>
+					<td>
+						<Link><i className="fa fa-paper-plane-o text-success  mr-2"></i> resend</Link>
+					</td>
+				</tr>
+		))
+	}
+
+	// projectId
+	useEffect( () => {
+		const getIdFromUrl = async () => {
+			const id = await searchParams.get( 'projectId' );
+			setProjectId( id );
+		}
+		getIdFromUrl();
+	}, [] );
+
+	// get project data
+	useEffect( () => {
+		if( !projectId )
+			return
+		
+		const getProjectData = async () => {
+			
+			const user_id = await getUser().userId;
+			
+			setUserId( user_id );
+
+			const isowner = await isOwner( user_id, projectId );
+
+			setIsProjectOwner ( isowner );
+			
+			const theproject = await getProject( projectId );
+			setProject ( theproject );
+			
+			const projectInvitation = await getProjectInvitations( user_id, projectId );
+console.log( 'projectInvitation', projectInvitation );
+			setProjectInvitation( projectInvitation );
+			setCountProjectInvitation( projectInvitation.length );
+			if( projectInvitation.length )
+				setProjectInvitS( 's' )
+			
+			const getStatus = async () => {
+				const status = await getProjectStatus( projectId );
+				setProjectStatus( status );			
+			}
+		}
+		getProjectData();
+	}, [ projectId ] );
+
+	
+
 	return (
 		<>
+			<Modal open={ openProjectModalView } onClose={ onCloseOpenProjectModalView } center>
+				<ModalViewProject params =
+					{{
+						project: project,
+					}}
+				/>
+			</Modal>
+			
 				<Header />
 				<Sidebar />	
 				        <div className="content-body">
@@ -20,42 +164,46 @@ const Project = ( params ) => {
 				<Breadcrumbs />
 
             <div className="container-fluid mt-3">
-				<h3>Creation of prospective and predictive analysis algorithms</h3>
+				<h3><BuildPageTitle />&nbsp;</h3>
 				<br />
                 <div className="row">
                     <div className="col-lg-3 col-sm-6">
                         <div className="card gradient-1">
                             <div className="card-body">
-                                <h3 className="card-title text-white">Project Owner</h3>
+                                <h3 className="card-title text-white">{ isProjectOwner ? 'Project Category' : 'Project Owner' }</h3>
                                 <div className="d-inline-block">
-                                    <h2 className="text-white">Paul</h2>
-                                    <p className="text-white mb-0">Smith</p>
+                                    <h2 className="text-white" style={{ fontSize: '18px' }}>{ isProjectOwner ? project.categoryTitle : project.owner }</h2>
+                                    <p className="text-white mb-0">{ isProjectOwner ? project.categoryDescription : project.owner }</p>
                                 </div>
-                                <span className="float-right display-5 opacity-5"><i className="fa fa-user"></i></span>
+                                <span className="float-right display-5 opacity-5">
+									{ isProjectOwner ? <i className="fa fa-file" ></i> : <i className="fa fa-user"></i> }
+								</span>
                             </div>
                         </div>
                     </div>
 					<div className="col-lg-3 col-sm-6">
                         <div className="card gradient-3">
                             <div className="card-body">
-                                <h3 className="card-title text-white">Project type</h3>
+                                <h3 className="card-title text-white">{ isProjectOwner ? 'Creation date' : 'Project type' }</h3>
                                 <div className="d-inline-block">
-                                    <h2 className="text-white">Internal</h2>
-                                    <p className="text-white mb-0">Company to employee</p>
+                                    <h2 className="text-white" style={{ fontSize: '18px' }}>
+										{ isProjectOwner ? <Moment format='ddd DD MMM' >{ project.date }</Moment> : project.projectTypeTitle }
+									</h2>
+                                    <p className="text-white mb-0">{ isProjectOwner ? <Moment format='YYYY' >{ project.date }</Moment> : project.projectTypeDescription }</p>
                                 </div>
-                                <span className="float-right display-5 opacity-5"><i className="fa fa-paperclip"></i></span>
+                                <span className="float-right display-5 opacity-5">{ isProjectOwner ? <i className="fa fa-calendar"></i> : <i className="fa fa-paperclip"></i> }</span>
                             </div>
                         </div>
                     </div>
                     <div className="col-lg-3 col-sm-6">
                         <div className="card gradient-2">
                             <div className="card-body">
-                                <h3 className="card-title text-white">Budget</h3>
+                                <h3 className="card-title text-white">{ isProjectOwner ? 'Invitation sent' : 'Budget' }</h3>
                                 <div className="d-inline-block">
-                                    <h2 className="text-white">$ 0</h2>
-                                    <p className="text-white mb-0">No budget</p>
+                                    <h2 className="text-white" style={{ fontSize: '18px' }}>{ isProjectOwner ? countProjectInvitation : project.budget }</h2>
+                                    <p className="text-white mb-0">{ isProjectOwner ? 'invitation' + invitS : '$' }</p>
                                 </div>
-                                <span className="float-right display-5 opacity-5"><i className="fa fa-money"></i></span>
+								<span className="float-right display-5 opacity-5">{ isProjectOwner ? <i className="fa fa-paper-plane"></i> : <i className="fa fa-money"></i> }</span>
                             </div>
                         </div>
                     </div>
@@ -64,8 +212,8 @@ const Project = ( params ) => {
                             <div className="card-body">
                                 <h3 className="card-title text-white">Status</h3>
                                 <div className="d-inline-block">
-                                    <h2 className="text-white">Started</h2>
-                                    <p className="text-white mb-0">Jan - March 2019</p>
+                                    <h2 className="text-white" style={{ fontSize: '18px' }}>{ isProjectOwner && projectStatus.length } user</h2>
+                                    <p className="text-white mb-0">{ isProjectOwner ? 'Started the project' : 'Starting date' }</p>
                                 </div>
                                 <span className="float-right display-5 opacity-5"><i className="fa fa-tasks"></i></span>
                             </div>
@@ -80,7 +228,7 @@ const Project = ( params ) => {
                                 <div className="card">
                                     <div className="card-body pb-0 d-flex justify-content-between">
                                         <div style={{ width: '100%' }}>
-                                            <h4 className="mb-1">Project's Chat and files</h4>
+                                            <h4 className="mb-1">Communication and files</h4>
                                             
 											
 											
@@ -156,76 +304,24 @@ const Project = ( params ) => {
                                         <table className="table table-xs mb-0">
                                             <thead>
 												<tr>  <h4 className="mb-1">Invitations sent</h4> </tr>
-                                                <tr>
-                                                    <th>Email</th>
-                                                    <th>Name</th>
-                                                    <th>Status</th>
-                                                    <th>Activity</th>
-													<th>Action</th>
-                                                </tr>
+                                                { 
+													countProjectInvitation ? 
+														<tr>
+															<th>Email</th>
+															<th>Name</th>
+															<th>Status</th>
+															<th>Rensendings</th>
+															<th>Action</th>
+														</tr>
+													:
+														<tr>
+															<th>No invitation sent. Edit the project</th>
+														</tr>
+												}
                                             </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td>sarah@foo.com</td>
-                                                    <td>Sarah Mancini</td>
-                                                    <td><i className="fa fa-circle-o text-success  mr-2"></i> Started</td>
-                                                    <td>
-                                                        <span>Last Login</span>
-                                                        <span className="m-0 pl-3">10 sec ago</span>
-                                                    </td>
-													<td><Link><i className="fa fa-comments-o text-success  mr-2"></i> chat</Link></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Walter R.</td>
-                                                    <td>Pixel 2</td>
-                                                    <td><i className="fa fa-circle-o text-info  mr-2"></i> Read</td>
-                                                    <td>
-                                                        <span>Last Login</span>
-                                                        <span className="m-0 pl-3">50 sec ago</span>
-                                                    </td>
-													<td><Link><i className="fa fa-comments-o text-success  mr-2"></i> chat</Link></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Andrew D.</td>
-                                                    <td>OnePlus</td>
-                                                    <td><i className="fa fa-circle-o text-warning  mr-2"></i> Pending</td>
-                                                    <td>
-                                                        <span>Last Login</span>
-                                                        <span className="m-0 pl-3">None</span>
-                                                    </td>
-													<td><Link><i className="fa fa-plane text-warning  mr-2"></i> re-invite</Link></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Megan S.</td>
-                                                    <td>Galaxy</td>
-                                                    <td><i className="fa fa-circle-o text-success  mr-2"></i> Started</td>
-                                                    <td>
-                                                        <span>Last Login</span>
-                                                        <span className="m-0 pl-3">10 sec ago</span>
-                                                    </td>
-													<td><Link><i className="fa fa-comments-o text-success  mr-2"></i> chat</Link></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Doris R.</td>
-                                                    <td>Moto Z2</td>
-                                                    <td><i className="fa fa-circle-o text-success  mr-2"></i> Started</td>
-                                                    <td>
-                                                        <span>Last Login</span>
-                                                        <span className="m-0 pl-3">10 sec ago</span>
-                                                    </td>
-													<td><Link><i className="fa fa-comments-o text-success  mr-2"></i> chat</Link></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Elizabeth W.</td>
-                                                    <td>Notebook Asus</td>
-                                                    <td><i className="fa fa-circle-o text-warning  mr-2"></i> Pending</td>
-                                                    <td>
-                                                        <span>Last Login</span>
-                                                        <span className="m-0 pl-3">None²</span>
-                                                    </td>
-													<td><Link><i className="fa fa-plane text-warning  mr-2"></i> re-invite </Link></td>
-                                                </tr>
-                                            </tbody>
+											<tbody>
+												<BuildInvitationsLine />
+											</tbody>
                                         </table>
                                     </div>
                                 </div>

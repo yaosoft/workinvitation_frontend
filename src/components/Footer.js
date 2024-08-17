@@ -9,7 +9,7 @@ const Footer = ( params ) => {
 
 		<div className="footer">
 						<div className="copyright">
-							<p>Copyright &copy; Designed & Developed by <a href="https://themeforest.net/user/quixlab">Work Invitation</a> 2018</p>
+							<p>Copyright &copy; Designed & Developed by <a href="https://diamta.com">Diamta - Work Invitation</a> 2024</p>
 						</div>
 					</div>
 		</>

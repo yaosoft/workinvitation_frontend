@@ -30,7 +30,7 @@ const Sidebar = ( params ) => {
 									<li><Link to="/project/received">Received Projects</Link></li>
 									<li><Link to="/project/sent">Sent Projects</Link></li>
 									<li><Link to="/project/saved">Saved Projects</Link></li>
-									<li><Link to="/project/edit/0">Create a Project</Link></li>
+									<li><Link to="/project/edit/?projectId=0">Create a Project</Link></li>
 								</ul>
 							</li>
 							<li>

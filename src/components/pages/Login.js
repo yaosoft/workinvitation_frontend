@@ -8,13 +8,17 @@ import {
 	RadiusUprightOutlined,
 	LoadingOutlined
 } from '@ant-design/icons';
+
 import { AuthContext } from "../../context/AuthProvider";
+import { SiteContext } from "../../context/site";
 
 const Login = ( params ) => {
 	// context
-	const { logIn }	= useContext( AuthContext );
+	const { logIn }			= useContext( AuthContext );
+	const { getReferrer }	= useContext( SiteContext );
+	
 
-	const [ loginSpin, setLoginSpin ] 	= useState( 'none' );
+	const [ loginSpin, setLoginSpin ] = useState( 'none' );
 
 		// login email
 	const [ loginEmail, setLoginEmail ] = useState( '' );
@@ -83,7 +87,6 @@ const Login = ( params ) => {
 			userId: 	await respJson.json(),
 		}
 
-console.log( user );
 
 		// stop login button's spin
 		setLoginSpin( 'none' );
@@ -92,8 +95,9 @@ console.log( user );
 		logIn( user );	
 		
 		// goto validation
-		const validationPath	= '/project/received';
-		navigate( validationPath );
+		const path	= getReferrer() ? getReferrer() : '/project/received';
+
+		navigate( path );
 	}
 	
 

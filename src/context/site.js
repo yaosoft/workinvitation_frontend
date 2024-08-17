@@ -95,7 +95,7 @@ export const SiteProvider = ({ children }) => {
 						/>
 					}
 					fullscreen
-					tip		= "chargement" 
+					tip		= "loading" 
 					size	= "large"
 			/>
 			

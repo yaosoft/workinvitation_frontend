@@ -9,21 +9,20 @@ const SecuredPagesAuth = () => {
 	const { isAuthenticated }	= useContext( AuthContext );
 	const { setReferrer } 		= useContext( SiteContext );
 	const securedPagesPath 	= [
-		'/commander',
-		'/mon-espace',
-		'/mon-espace/historique',
-		'/mon-espace/changer-de-mot-de-passe'
-		
+		'/project/edit',
+		'/project/sent',
+		'/project/view',
+		'/project/received'
 	]
 
 	const location 		= useLocation();
 	const currentPage 	= location.pathname;
+// alert( isAuthenticated() );
 	const [authenticate, setAuthenticate ] = useState( isAuthenticated() );
-	
 	useEffect(() => {
-		if( securedPagesPath.includes( currentPage ) && !authenticate  ){
+		if( ( securedPagesPath.filter( ( path ) => currentPage.includes( path ) ).length  ) && !authenticate ) {
 			setReferrer( currentPage );
-			navigate( '/connexion' )
+			navigate( '/login' )
 		}
 	}, [authenticate]);
 	

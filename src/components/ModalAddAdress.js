@@ -16,7 +16,7 @@ const ModalEditContact = ( params ) => {
 
 	var newContact = {};
 	
-	const openNotificationContactSuccess = ( message ) => {
+	const openNotificationContactSuccess = ( message ) => {			// Error no size selected
 		notification.success({
 			message: `${message}`,
 			duration: 3,
@@ -24,7 +24,7 @@ const ModalEditContact = ( params ) => {
 			placement: 'topRight',
 		});
 	};
-	const openNotificationModifContactSuccess = ( message ) => {
+	const openNotificationModifContactSuccess = ( message ) => {			// Error no size selected
 		notification.success({
 			message: `${message}`,
 			duration: 3,
@@ -42,7 +42,7 @@ const ModalEditContact = ( params ) => {
 	};
 
 	// 
-	const { setContact, contact } 	= useContext( SiteContext );
+	const { setContact, contact } = useContext( SiteContext );
 	const { contacts, setContacts } = useContext( SiteContext );
 	
 	// Contact email
@@ -50,16 +50,12 @@ const ModalEditContact = ( params ) => {
 	const handleChangeEmail = ( e ) => {	
 		setEmail( e.target.value );
 	}
-
+		
 	// Contact nom
 	const [ name, setName ] = useState( '' );
 	const handleChangeName = ( e ) => {	
 		setName( e.target.value );
 	}
-
-	// Contact uid
-	const [ uid, setUid ] = useState( '' );
-
 
 	// Update Contact
 	const handleClickModifyContact = () => {
@@ -78,38 +74,26 @@ const ModalEditContact = ( params ) => {
 			message.error( emailValidation );
 			return;
 		}
-
-		// duplicate verification
-		const check = contacts.filter( e => e.name == name && e.email == email );
-		console.log( 'check', check );
-		if( check.length ){
-			message.error( 'This contact already exists!' );
-			return;
-		}
-		// delete and recreate the contact in the contacts list
-		// newContact = {
-			// name: name,
-			// email: email
-		// }
-alert( uid );
-console.log( 'contacts', contacts );
-		const toUpdate = contacts.filter( e => e.uid == uid )[ 0 ];
-		toUpdate.email = email;
-		toUpdate.name  = name;
 		
-		const newContacts = contacts.map( e => e.uid == uid ? toUpdate : e )
-console.log( newContact );
+		// delete and recreate the contact in the contacts list
+		
+		newContact = {
+			name: name,
+			email: email
+		}
 		// contacts.push( newContact );
-		setContact( toUpdate );
-		setContacts( newContacts );
-
-		// deleteAContact();
-
+		setContact( newContact );
+		const cont = contacts;
+		cont.push( newContact );
+		setContacts( cont );
+		
+		deleteAContact();
+		
 		openNotificationModifContactSuccess( 'Success' );
 		window.document.getElementById( 'closeEditModal' ).click(); // Todo: react way
 
 	}
-
+	
 	// Delete cntact
 	const handleClickDeleteContact = () => {
 		deleteAContact();
@@ -120,10 +104,10 @@ console.log( newContact );
 	}
 	// Delete current contact
 	const deleteAContact = () => {
-		setContacts( contacts.filter( e => e.uid != contact.uid ) );
+		setContacts( contacts.filter( e => e.email != contact.email ) );
 	}
-
-
+	
+	
 	// Name validation
 	const isValideName = () => {
 		//if( !name )
@@ -140,15 +124,14 @@ console.log( newContact );
 
 		return true;
 	}
-
-	// alert( contact.email );	
+	
+// alert( contact.email );	
 	// window.document.getElementById( 'edit-recipient-name' ).value = contact.name;
 	// window.document.getElementById( 'edit-recipient-email' ).value = contact.email;
-
+	
 	useEffect(() => {
 		setEmail( contact.email );
 		setName( contact.name );
-		setUid( contact.uid );
 	}, [ contact ] );
 
 	return (

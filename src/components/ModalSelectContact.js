@@ -12,7 +12,7 @@ import {
 	LoadingOutlined
 } from '@ant-design/icons';
 
-const ModalAddContact = ( params ) => {
+const ModalSelectContact = ( params ) => {
 
 	var newContact = {};
 	
@@ -115,11 +115,11 @@ console.log( 'check', check );
 	return (
 		<>
 			<div class="bootstrap-modal">
-				<div class="modal fade" style={{ zIndex: 5 }} id="contactAddModal" tabindex="-1" role="dialog" aria-labelledby="contactAddModalLabel" aria-hidden="true">
+				<div class="modal fade" style={{ zIndex: 5 }} id="contactSelectModal" tabindex="-1" role="dialog" aria-labelledby="contactSelectModalLabel" aria-hidden="true">
 					<div class="modal-dialog" role="document">
 						<div class="modal-content">
 							<div class="modal-header">
-								<h5 class="modal-title" id="contactAddModalLabel">Add a Contact</h5>
+								<h5 class="modal-title" id="contactSelectModalLabel">Select a Contact</h5>
 								<button id="closeModal" type="button" class="close" data-dismiss="modal" aria-label="Close">
 									<span aria-hidden="true">&times;</span>
 								</button>
@@ -166,4 +166,4 @@ console.log( 'check', check );
 	);
 };
 
-export default ModalAddContact;
+export default ModalSelectContact;

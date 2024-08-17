@@ -11,10 +11,13 @@ import { AuthContext } from '../../context/AuthProvider';
 
 import '../../sidebarOverrides.css';
 
-const SentProjects = ( params ) => {
+const ListProjects = ( params ) => {
+	
+	const pageTitle 	= params.params.pageTitle;
+	const pageName 		= params.params.pageName;
 	
 	const { getUser } = useContext( AuthContext );
-	const { getSentProjects, getSentInvitations } = useContext( ProjectContext );
+	const { getSentProjects, getSentInvitations, getSavedProjects, getReceivedProjects } = useContext( ProjectContext );
 	const userId = getUser().userId;
 	
 	// projectts
@@ -25,7 +28,7 @@ const SentProjects = ( params ) => {
 	const [ invitationList, setInvitationList ] = useState( [] );
 	const [ countInvitation, setCountInvitation ] = useState( 0 );
 
-	// Build contacts
+	// Build Project List
 	const BuildProjectList = () => {
 		return(
 			projectList.map( ( project, key ) =>
@@ -50,15 +53,26 @@ const SentProjects = ( params ) => {
 
 	// get user's sent project
 	useEffect( () => {
+		// Sent project
+		
 		// Get all projects user
 		const getProjectList = async () => {
-			const list = await getSentProjects( userId );
+			var list = '';
+			if( pageName == 'SentProject' ){
+				list = await getSentProjects( userId );
+			}
+			else if( pageName == 'SavedProject' ){
+				list = await getSavedProjects( userId );
+			}
+			else if( pageName == 'ReceivedProject' ){
+				list = await getReceivedProjects( userId );
+			}
 			setProjectList( list );
 			setCountProject( list.length );
 		}
 		getProjectList( userId );
 
-		// Get user's invitation
+		// Get project's invitation
 		const getInvitationList = async () => {
 			const list = await getSentInvitations( userId );
 console.log( 'list', list );			
@@ -67,7 +81,7 @@ console.log( 'list', list );
 		}
 		getInvitationList( userId );
 
-	}, [] );
+	}, [ pageName ] );
 
 
 
@@ -83,7 +97,7 @@ console.log( 'list', list );
 				<div className="container-fluid">
                 <div className="row">
                     <div className="col-lg-12">
-						<h3>Sent Projects ( {countProject} )</h3>
+						<h3>{ pageTitle } ( {countProject} )</h3>
 						<br />
                         <div className="card">
                             <div className="card-body">
@@ -129,4 +143,4 @@ console.log( 'list', list );
 	);
 };
 
-export default SentProjects;
+export default ListProjects;
