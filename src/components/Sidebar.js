@@ -7,7 +7,7 @@ const Sidebar = ( params ) => {
 // console.log( params );
 	return (
 		<>
-		<div className="nav-header" style={{ backgroundColor: '#df6615' }} >
+		<div className="nav-header" style={{ backgroundColor: '#df6615', height: '100%' }} >
 					<div className="brand-logo">
 						<Link to="/accueil">
 							<b className="logo-abbr"><img src="./img/logo.png" alt="" /> </b>
@@ -38,8 +38,8 @@ const Sidebar = ( params ) => {
 									<i className="fa fa-users"></i> <span className="nav-text">Contact list</span>
 								</a>
 								<ul aria-expanded="false">
-									<li><Link >Contact lists</Link></li>
-									<li><Link >Add a contact list</Link></li>
+									<li><Link to="/contacts-list/list" >Contact lists</Link></li>
+									<li><Link to="/contacts-list/create" >Create a contact list</Link></li>
 								</ul>
 							</li>
 							<li className="nav-label"><span style={{ color: '#8072c9' }}>Profile info</span></li>

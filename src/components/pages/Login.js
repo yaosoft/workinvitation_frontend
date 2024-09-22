@@ -25,7 +25,7 @@ const Login = ( params ) => {
 	const handleChangeLoginEmail = ( e ) => {	
 		setLoginEmail( e.target.value );
 	}
-	
+
 	// login password
 	const [ loginPassword, setLoginPassword ] = useState( '' );
 	const handleChangeLoginPassword = ( e ) => {	
@@ -64,8 +64,11 @@ const Login = ( params ) => {
 		// }
 		
 		// Post
-		const loginApiURL = 'http://localhost/diamta/projects/public/index.php/api/user/login';
-		const method = 'POST';
+		const base_api_url	= 'http://localhost/diamta/projects/public/index.php/api/'; 
+		// const base_api_url		= 'https://diamta.com/projects/public/index.php/api/'
+
+		const loginApiURL = base_api_url + 'user/login';
+		const method 	= 'POST';
 		const loginData = {
 			password: 	loginPassword,
 			email: 		loginEmail

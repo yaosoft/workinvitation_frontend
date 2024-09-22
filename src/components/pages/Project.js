@@ -16,7 +16,7 @@ import '../../sidebarOverrides.css';
 import '../../chatStyles.css';
 
 const Project = ( params ) => {
-	
+
 	// Sets the moment instance to use.
 	Moment.globalMoment = moment;
 	// Set the locale for every react-moment instance to French.
@@ -127,11 +127,14 @@ const Project = ( params ) => {
 
 			setIsProjectOwner ( isowner );
 			
-			const theproject = await getProject( projectId );
+			const projectStatus = await searchParams.get( 'projectStatus' );
+			const userId = await searchParams.get( 'userId' );
+			
+			const theproject = await getProject( projectId, projectStatus, userId  );
 			setProject ( theproject );
 			
 			const projectInvitation = await getProjectInvitations( user_id, projectId );
-console.log( 'projectInvitation', projectInvitation );
+// console.log( 'projectInvitation', projectInvitation );
 			setProjectInvitation( projectInvitation );
 			setCountProjectInvitation( projectInvitation.length );
 			if( projectInvitation.length )

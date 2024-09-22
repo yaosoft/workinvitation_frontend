@@ -36,7 +36,7 @@ const ModalEditContact = ( params ) => {
 		notification.success({
 			message: `${message}`,
 			duration: 3,
-			description: 'Contact have been deleted!',
+			description: 'Contact have been removed!',
 			placement: 'topRight',
 		});
 	};
@@ -92,13 +92,23 @@ const ModalEditContact = ( params ) => {
 			// email: email
 		// }
 alert( uid );
-console.log( 'contacts', contacts );
-		const toUpdate = contacts.filter( e => e.uid == uid )[ 0 ];
+
+		var toUpdate = '';
+		contacts.map( e => {
+			if( e.id ){		// contact existing in the database
+				if( e.id == uid )
+					toUpdate = e
+			} 
+			if ( e.uid ){	// newly created contact
+				if( e.uid == uid )
+					toUpdate = e
+			} 
+		})
+
 		toUpdate.email = email;
 		toUpdate.name  = name;
 		
-		const newContacts = contacts.map( e => e.uid == uid ? toUpdate : e )
-console.log( newContact );
+		const newContacts = contacts.map( e => e.id == uid ? toUpdate : e )
 		// contacts.push( newContact );
 		setContact( toUpdate );
 		setContacts( newContacts );
@@ -118,11 +128,23 @@ console.log( newContact );
 		openNotificationDeleteContactSuccess( 'Success' );
 		window.document.getElementById( 'closeEditModal' ).click(); // Todo: react way
 	}
+
 	// Delete current contact
 	const deleteAContact = () => {
-		setContacts( contacts.filter( e => e.uid != contact.uid ) );
+		var toDelete = '';
+		contacts.map( e => {
+			if( e.id ){		// contact existing in the database
+				if( e.id == uid )
+					toDelete = e
+			} 
+			if ( e.uid ){	// newly created contact
+				if( e.uid == uid )
+					toDelete = e
+			} 
+		})
+		
+		setContacts( contacts.filter( e => e.id != toDelete.id ) );
 	}
-
 
 	// Name validation
 	const isValideName = () => {
@@ -146,9 +168,10 @@ console.log( newContact );
 	// window.document.getElementById( 'edit-recipient-email' ).value = contact.email;
 
 	useEffect(() => {
+
 		setEmail( contact.email );
 		setName( contact.name );
-		setUid( contact.uid );
+		setUid( contact.id ? contact.id : contact.uid ); // newly created contact doesn't have id but uid
 	}, [ contact ] );
 
 	return (
@@ -200,7 +223,7 @@ console.log( newContact );
 									class	= "btn btn-danger"
 									onClick = { e => handleClickDeleteContact( e ) }
 								>
-									Delete contact
+									Remove contact
 								</button>
 								<button 
 									type	= "button" 

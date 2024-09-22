@@ -14,7 +14,7 @@ import ModalAddContact from '../ModalAddContact';
 import ModalEditContact from '../ModalEditContact';
 import ModalSelectContact from '../ModalSelectContact';
 
-import { Space, Spin, Button, notification, message, Popconfirm, Select, Radio, Flex, DatePicker, Upload } from 'antd';
+import { Space, Spin, Button, notification, message, Popconfirm, Radio, Flex, DatePicker, Upload } from 'antd';
 import {
 	RadiusBottomleftOutlined,
 	RadiusBottomrightOutlined,
@@ -25,6 +25,8 @@ import {
 	QuestionCircleOutlined
 } from '@ant-design/icons';
 
+import { Form, Input, Select } from 'antd';
+
 import moment from 'moment/min/moment-with-locales';
 import Moment from 'react-moment';
 
@@ -34,6 +36,9 @@ import { tinymce, Editor } from "@tinymce/tinymce-react";
 import '../../sidebarOverrides.css';
 import '../../tinymceOverrides.css';
 const SentProjectEdit = ( params ) => {
+	
+	// TextArea
+	const { TextArea } = Input;
 	
 	// today
 	const [ today, setToday ] = useState( '' );
@@ -80,12 +85,16 @@ const SentProjectEdit = ( params ) => {
 
 	//  Project Description  ( tinymce textarea )
 	const [ descriptionValue, setDescriptionValue ]	= useState( '' );
-	const [ text, setText ]		= useState("");
+	// const [ text, setText ]		= useState("");
 	const [ defaultDescription, setDefaultDescription ] = useState( 'Your Project details...' );
-	const onEditorInputChange = (newValue, editor) => {
-		setDescriptionValue(newValue);
-		setText(editor.getContent({ format: "text" }));
-	}
+	// const onEditorInputChange = (newValue, editor) => {
+		// setDescriptionValue(newValue);
+		// setText(editor.getContent({ format: "text" }));
+	// }
+
+	const handleChangeDescription = ( e ) => {
+		setDescriptionValue( e.target.value );
+	} 
 
 	// Select Project Type
 	const { getType } 							= useContext( ProjectContext );
@@ -265,7 +274,7 @@ const SentProjectEdit = ( params ) => {
 		}
 
 		// Description 
-		if( type == 'saveSend' && !text ){
+		if( type == 'saveSend' && !descriptionValue ){
 			message.error( 'Type a description' );
 			return;
 		}
@@ -295,7 +304,7 @@ const SentProjectEdit = ( params ) => {
 
 		postData[ 'category' ] 		= categorySelected; 
 		postData[ 'title' ] 		= subject; 
-		postData[ 'description' ] 	= text; 
+		postData[ 'description' ] 	= descriptionValue; 
 		postData[ 'type' ] 			= typeSelected;	// project type
 		postData[ 'budget' ] 		= budget;	// true / false
 		postData[ 'length' ]		= lengthSelected;
@@ -311,10 +320,9 @@ const SentProjectEdit = ( params ) => {
 
 		// remove files that already exist on the server before post
 		var fileListToPost = [];
-		if( pageType == 'edit' ){
-
+		// if( pageType == 'edit' ){
 			fileListToPost = fileList.filter( e => e.status != 'done' )
-		}
+		// }
 
 		// list of files to delete on the server
 		var filesToDelete = [];
@@ -338,8 +346,7 @@ const SentProjectEdit = ( params ) => {
 			message.success( 'upload successfully.' );
 		}
 		setUploading(false)
-		
-		
+
 		// setFileList([]);
 	}
 
@@ -360,7 +367,10 @@ const SentProjectEdit = ( params ) => {
 
 	// get project's categories
 	useEffect( () => {
-
+		
+		// reset contacts list
+		setContacts( [] );
+		
 		const getCategoryList = async () => {
 			const categoryList = await getCategory();
 			
@@ -388,6 +398,7 @@ const SentProjectEdit = ( params ) => {
 	useEffect( () => {
 
 		const pageType = projectId == 0 ? 'new' : 'edit';
+
 		setPageType( pageType );
 
 		const pageTitle = pageType == 'edit' ? 'Edit a Project' : 'Create a New Project';
@@ -396,22 +407,28 @@ const SentProjectEdit = ( params ) => {
 		if( pageType == 'edit' ){
 			const getProjectData = async () => {
 
-				const data = await getProject( projectId );
+				const data = await getProject( projectId, 0, 0 ); //  projectId, projectStatus, userId
 
 				setProject ( data );
 
+				// category
 				setCategorySelected( data.categoryId );
 				setCategoryDefault( data.categoryTitle );
 
+				// title
 				setSubject( data.title );
 				
-				setDefaultDescription( data.description );
+				// description
+				setDescriptionValue( data.description );
 
+				// ptoject type
 				setTypeSelectedDefault( data.projectTypeTitle );
 				setTypeSelected( data.projectTypeId );
 				
+				// budget
 				setBudget( data.budget );
 				
+				// duration
 				setLengthSelectedDefault( data.durationTitle );
 				setLengthSelected( data.durationId );
 
@@ -515,17 +532,15 @@ const SentProjectEdit = ( params ) => {
 												/>
                                             </div>
                                             <div className="form-group">
-                                                <Editor 
-													className 	= "textarea_editor form-control bg-light" 
-													rows		= "15" 
-													// onChange	= { e => handleChangeDescription( e ) }
-													apiKey		= 'yr2i0pu19xdsekckkz7snhi63ool3vsbgmbvoxxgxrr4kpp5' // your api
-													
-													onEditorChange	= { (newValue, editor) => onEditorInputChange(newValue, editor) }
-													onInit			= { (evt, editor) => { setText(editor.getContent({ format: "html" })) } }
-													value			= { setDescriptionValue }
-													initialValue	= { defaultDescription }
-													placeholder		= 'Job details'
+												<TextArea 
+													rows			= { 15 }
+													defaultValue 	= { defaultDescription }
+													value 			= { descriptionValue }
+													onChange 		= { ( e ) => handleChangeDescription( e ) }
+													type			= "text" 
+													className		= "form-control" 
+													id				= "description" 
+													placeholder 	= "Job description"
 												/>
 
                                             </div>
@@ -620,7 +635,21 @@ const SentProjectEdit = ( params ) => {
 												data-target		= "#contactSelectModal"
 												style			= {{ padding: '2px 18px' }}
 											>
-												Select Existing Contacts
+												Select an Existing Contacts
+												<span className="btn-icon-right">
+													<i className="fa fa-list"></i>
+													<i className="fa fa-user"></i>
+												</span>
+											</button>
+											&nbsp;
+											<button 
+												type			= "button" 
+												className		= "btn btn-ligth" 
+												data-toggle		= "modal" 
+												data-target		= "#contactSelectModal"
+												style			= {{ padding: '2px 18px' }}
+											>
+												Select a Contact List
 												<span className="btn-icon-right">
 													<i className="fa fa-list"></i>
 													<i className="fa fa-user"></i>
@@ -646,7 +675,7 @@ const SentProjectEdit = ( params ) => {
 											&nbsp;
 											<Popconfirm
 												title = "Delete the task"
-												description = "Do you want to save your project and continue sending later?"
+												description = "Do you want to save your project and continue later with sending?"
 												icon = {
 													<QuestionCircleOutlined
 														style = {{

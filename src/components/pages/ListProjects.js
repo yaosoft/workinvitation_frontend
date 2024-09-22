@@ -20,11 +20,10 @@ const ListProjects = ( params ) => {
 	const { getSentProjects, getSentInvitations, getSavedProjects, getReceivedProjects } = useContext( ProjectContext );
 	const userId = getUser().userId;
 	
-	// projectts
+	// projects
 	const [ projectList, setProjectList ] = useState( [] );
 	const [ countProject, setCountProject ] = useState( 0 );
-	
-	// projectts
+
 	const [ invitationList, setInvitationList ] = useState( [] );
 	const [ countInvitation, setCountInvitation ] = useState( 0 );
 
@@ -33,17 +32,40 @@ const ListProjects = ( params ) => {
 		return(
 			projectList.map( ( project, key ) =>
 				<div className="message">
-                    <Link to={ "/project/view/?projectId=" + project.id }>
-                        <div className="col-mail col-mail-1">
-                            <div className="email-checkbox">
-                                <input type="checkbox" id="chk21" />
-                                <label className="toggle" for="chk21"></label>
-                            </div><span className="star-toggle ti-star"></span>
-                        </div>
-                        <div className="col-mail col-mail-2">
-                            <div className="subject">{ project.title }</div>
-                            <div className="date">{ project.date }</div>
-                        </div>
+                    <Link to={ "/project/view/?projectId=" + project.id + "&projectStatus=" + project.status + "&userId=" + userId }>
+
+							{ project.status != 5 ?
+								<b>
+							
+									<div className="col-mail col-mail-1">
+										<div className="email-checkbox">
+											<input type="checkbox" id="chk21" />
+											<label className="toggle" for="chk21"></label>
+										</div><span className="star-toggle ti-star"></span>
+									</div>
+									<div className="col-mail col-mail-2">
+										{ project.title }
+										<div className="subject">{ project.title }</div>
+										<div className="date">{ project.date }</div>
+									</div>
+
+								</b>
+								:
+								<>
+									<div className="col-mail col-mail-1">
+										<div className="email-checkbox">
+											<input type="checkbox" id="chk21" />
+											<label className="toggle" for="chk21"></label>
+										</div><span className="star-toggle ti-star"></span>
+									</div>
+									<div className="col-mail col-mail-2">
+										{ project.title }
+										<div className="subject">{ project.title }</div>
+										<div className="date">{ project.date }</div>
+									</div>
+								</>
+							}
+						
                     </Link>
 				</div>
 			)
@@ -51,7 +73,7 @@ const ListProjects = ( params ) => {
 	}
 
 
-	// get user's sent project
+	// get user's sent projects
 	useEffect( () => {
 		// Sent project
 		
@@ -70,6 +92,7 @@ const ListProjects = ( params ) => {
 			setProjectList( list );
 			setCountProject( list.length );
 		}
+
 		getProjectList( userId );
 
 		// Get project's invitation

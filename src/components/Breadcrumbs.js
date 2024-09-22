@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, Link, useLocation  } from 'react-router-dom';
-import ReceivedProjects from './pages/ReceivedProjects'
 
 
 

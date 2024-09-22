@@ -43,11 +43,12 @@ export const ProjectProvider = ({ children }) => {
 		}
 	}
 
-	const base_api_url		= 'http://localhost/diamta/projects/public/index.php/api/'; // http://localhost/diamta/projects/public/index.php/api/
+	const base_api_url	= 'http://localhost/diamta/projects/public/index.php/api/'; 
+	// const base_api_url		= 'https://diamta.com/projects/public/index.php/api/'
 	
 	// get project categories
 	const getCategory = async () => {
-		const url		= 'base_api_url + category/list';
+		const url		= base_api_url +  'category/list';
 		const data 		= {};
 		const method	= 'GET';
 		
@@ -59,7 +60,7 @@ export const ProjectProvider = ({ children }) => {
 
 	// get sent projects
 	const getSentProjects = async ( userId ) => {
-		const url		= 'base_api_url + project/sent/?userId=' + userId;
+		const url		= base_api_url +  'project/sent/?userId=' + userId;
 		const data 		= {};
 		const method	= 'GET';
 		
@@ -71,7 +72,7 @@ export const ProjectProvider = ({ children }) => {
 
 	// get saved project
 	const getSavedProjects =  async ( userId ) => {
-		const url		= 'base_api_url + project/saved/?userId=' + userId;
+		const url		= base_api_url +  'project/saved/?userId=' + userId;
 		const data 		= {};
 		const method	= 'GET';
 
@@ -83,7 +84,7 @@ export const ProjectProvider = ({ children }) => {
 
 	// get received project
 	const getReceivedProjects =  async ( userId ) => {
-		const url		= 'base_api_url + project/received/?userId=' + userId;
+		const url		= base_api_url +  'project/received/?userId=' + userId;
 		const data 		= {};
 		const method	= 'GET';
 
@@ -93,10 +94,10 @@ export const ProjectProvider = ({ children }) => {
 
 	}
 
-	// get sent projects
-	const getProject = async ( projectId ) => {
+	// get project's data
+	const getProject = async ( projectId, projectStatus, userId ) => {
 
-		const url		= 'base_api_url + project/getProject/?projectId=' + projectId;
+		const url		= base_api_url +  'project/getProject/?projectId=' + projectId + '&projectStatus=' + projectStatus + '&userId=' + userId;
 		const data 		= {};
 		const method	= 'GET';
 		
@@ -108,7 +109,7 @@ export const ProjectProvider = ({ children }) => {
 
 	// check is the user id the project owner
 	const isOwner = async ( userId, projectId ) => {
-		const url		= 'base_api_url + project/isOwner/?projectId=' + projectId + '&userId=' + userId;
+		const url		= base_api_url +  'project/isOwner/?projectId=' + projectId + '&userId=' + userId;
 		const data 		= {};
 		const method	= 'GET';
 		
@@ -119,7 +120,7 @@ export const ProjectProvider = ({ children }) => {
 
 	// check is the user id the project owner
 	const getProjectStatus = async ( projectId ) => {
-		const url		= 'base_api_url + project/getStatus/?projectId=' + projectId;
+		const url		= base_api_url +  'project/getStatus/?projectId=' + projectId;
 		const data 		= {};
 		const method	= 'GET';
 		
@@ -132,7 +133,7 @@ export const ProjectProvider = ({ children }) => {
 	// get sent invitation
 	const getSentInvitations = async ( userId ) => {
 
-		const url		= 'base_api_url + all/invitations/?userId=' + userId;
+		const url		= base_api_url +  'all/invitations/?userId=' + userId;
 		const data 		= {};
 		const method	= 'GET';
 		
@@ -145,7 +146,7 @@ export const ProjectProvider = ({ children }) => {
 	// get a project invitation
 	const getProjectInvitations = async ( userId, projectId ) => {
 
-		const url		= 'base_api_url + project/invitations/?userId=' + userId + '&projectId=' + projectId;
+		const url		= base_api_url +  'project/invitations/?userId=' + userId + '&projectId=' + projectId;
 		const data 		= {};
 		const method	= 'GET';
 		
@@ -157,7 +158,7 @@ export const ProjectProvider = ({ children }) => {
 
 	// get project types
 	const getType = async () => {
-		const url		= 'base_api_url + type/list';
+		const url		= base_api_url +  'type/list';
 		const data 		= {};
 		const method	= 'GET';
 		
@@ -169,7 +170,7 @@ export const ProjectProvider = ({ children }) => {
 
 	// get project duration
 	const getDuration = async () => {
-		const url		= 'base_api_url + duration/list';
+		const url		= base_api_url +  'duration/list';
 		const data 		= {};
 		const method	= 'GET';
 		
@@ -177,6 +178,17 @@ export const ProjectProvider = ({ children }) => {
 
 		return durations;
 		
+	}
+
+	// update User Project Status
+	const updateUserProjectStatus = async ( userId, userEmail ) => {
+		const url		= base_api_url +  'project/update/userProjectStatus/?userId=' + userId + '&userEmail=' + userEmail;
+		const data 		= {};
+		const method	= 'GET';
+
+		const resp = await fetchData( url, data, method );
+
+		return resp;
 	}
 
 	// post a project with files
@@ -191,12 +203,11 @@ export const ProjectProvider = ({ children }) => {
 		for ( var key in dataObj ) 
 			formData.append(key, dataObj[key]);
 
-
 // for (var key of formData.entries()) {
 	// console.log( 'key0 --> ' + key[0] + ', key1 --> ' + key[1]);
 // }
 		// You can use any AJAX library you like
-		const resp = await fetch( 'base_api_url + project/save', {
+		const resp = await fetch( base_api_url +  'project/save', {
 			method: 'POST',
 			body: formData,
 		})
@@ -223,7 +234,8 @@ export const ProjectProvider = ({ children }) => {
 				getProjectInvitations,
 				isOwner,
 				getProjectStatus,
-				backendServer
+				backendServer,
+				updateUserProjectStatus
 			}}
 		>
 		

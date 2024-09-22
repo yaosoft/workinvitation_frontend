@@ -13,6 +13,9 @@ export const SiteContext = createContext();
 
 export const SiteProvider = ({ children }) => {
 
+	const base_api_url	= 'http://localhost/diamta/projects/public/index.php/api/'; 
+	// const base_api_url		= 'https://diamta.com/projects/public/index.php/api/'
+	
 	// spiner
 	const [ spiner, setSpiner ] = useState( 'none' );
 
@@ -26,19 +29,20 @@ export const SiteProvider = ({ children }) => {
 				"Content-Type": "application/json",
 				// 'Content-Type': 'application/x-www-form-urlencoded',
 			},
-			body: JSON.stringify( data ), // body data type must match "Content-Type" header
+			...( method == 'POST' && { body: JSON.stringify( data ), } )
 		});
 		setTimeout( setSpiner, 2000, 'none' );
+		
 		if( response.status != 200 )
 			return false;
 		
 		if( response.status == 200 ){
-
-			if( method == 'GET' )
-				return response.json(); // parses JSON response into native JavaScript objects
+			return response.json(); // parses JSON response into native JavaScript objects
+			// if( method == 'GET' )
+				// return response.json(); // parses JSON response into native JavaScript objects
 			
-			if( method == 'POST' )
-				return true;
+			// if( method == 'POST' )
+				// return true;
 
 		}
 	}
@@ -60,11 +64,75 @@ export const SiteProvider = ({ children }) => {
 	// get site url
 	const siteURL = 'https://www.237usa.com';
 	
-	// contact
+	// contact to invite
 	const [ contact, setContact ] = useState( {} );
+
+	// contact for contact list
+	const [ contactsListContacts, setContactsListContacts ] = useState( [] );
+	const [ contactsListContact, setContactsListContact ] = useState( {} );
 	
 	// contacts
 	const [ contacts, setContacts ] = useState( [] );
+
+	// get existing contact to invite
+	const getContacts = async () => {
+
+		const url		= base_api_url + 'contacts/existing';
+		const data 		= {};
+		const method	= 'GET';
+
+		const contacts = await fetchData( url, data, method );
+
+		return contacts;
+
+	}
+
+	// create contact list
+	const contactsListSave = async ( data ) => {
+		const url 		= base_api_url +  'contactsList/edit';
+		const method 	= 'POST';
+		const resp 		= await fetchData( url, data, method );
+
+		return resp.id;
+	}
+
+	// save contact list contacts
+	const contactsListContactsSave = async ( data ) => {
+		const url 		= base_api_url +  'contactsList/contacts/save';
+		const method 	= 'POST';
+		const resp 		= await fetchData( url, data, method );
+
+		return resp;
+	}
+
+	// get all user contacts lists
+	const getContactsLists = async ( userId ) => {
+		const url 		= base_api_url +  'contactsLists/get/?userId=' + userId;
+		const method 	= 'GET';
+		const data		= {};
+		
+		const resp 		= await fetchData( url, data, method );
+		return resp;
+	}
+
+	// get a contacts list data
+	const getContactsList = async ( contactsListId ) => {
+		const url 		= base_api_url + 'contactsList/get/?contactsListId=' + contactsListId;
+		const method 	= 'GET';
+		const data 		= {};
+		const resp 		= await fetchData( url, data, method );
+
+		return resp;
+	}
+
+	// get contacts list's contacts
+	const getContactsListContacts = async ( contactsListId ) => {
+		const url 		= base_api_url + 'contacts/get/?contactsListId=' + contactsListId;
+		const method 	= 'GET';
+		const data 		= {};
+		const resp 		= await fetchData( url, data, method );
+		return resp;
+	}
 
 	return (	
 	
@@ -73,10 +141,20 @@ export const SiteProvider = ({ children }) => {
 				setReferrer,
 				getReferrer,
 				contact,
+				contactsListContacts,  
+				contactsListContact,
+				setContactsListContacts,
+				getContactsListContacts,
+				setContactsListContact,
 				setContact,
 				contacts,
 				setContacts,
 				siteURL,
+				getContacts,
+				contactsListSave,
+				getContactsLists,
+				getContactsList,
+				contactsListContactsSave
 			}}
 		>
 		
@@ -106,9 +184,7 @@ export const SiteProvider = ({ children }) => {
 		</SiteContext.Provider>
 
 	);
-	
-	
-	
+
 };
 
 SiteProvider.propTypes = {

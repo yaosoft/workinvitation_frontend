@@ -1,23 +1,51 @@
 import React, { useState, useEffect } from "react";
 
 import Index from './pages/Index';
-import ReceivedProjects from './pages/ReceivedProjects';
 import SentProjects from './pages/SentProjects';
-import SentProjectsEdit from './pages/SentProjectsEdit';
 import ListProjects from './pages/ListProjects.js';
-import EditProject from './pages/EditProject';
+import ProjectEdit from './pages/ProjectEdit';
 import Project from './pages/Project';
 import ProjectInvitations from './pages/ProjectInvitations';
 import Login from './pages/Login';
 import Registration from './pages/Registration';
-
 import NotFoundPage from './pages/NotFoundPage';
+import ContactsLists from './pages/ContactsLists';
+import ContactsListsEdit from './pages/ContactsListsEdit';
 
 
 
 const AllRoutes = {
 
 	routes: [
+		{	// Contact lists | list
+			element:  <ContactsLists 
+				params={{
+					pageName: 	'ContactsLists',
+					pageTitle: 	'Contacts Lists',
+				}} 
+			/>,
+			path: 'contacts-list/list',
+		},
+		{	// Contact lists | create
+			element:  <ContactsListsEdit
+				params={{
+					pageName: 	'ContactsListsCreate',
+					pageTitle: 	'Create a Contacts Lists ',
+					type: 'create'
+				}}
+			/>,
+			path: 'contacts-list/create',
+		},
+		{	// Contact lists | edit
+			element:  <ContactsListsEdit
+				params={{
+					pageName: 	'ContactsListsEdit',
+					pageTitle: 	'Edit a Contacts Lists ',
+					type: 		'edit'
+				}}
+			/>,
+			path: 'contacts-list/edit/*',
+		},
 		{	// Projects | Received projects
 			element:  <ListProjects 
 				params={{
@@ -54,7 +82,7 @@ const AllRoutes = {
 			path: 'project/saved',
 		},
 		{	// Projects | Create
-			element:  <EditProject />,
+			element:  <ProjectEdit />,
 			path: 'project/edit/*',
 		},
 		{	// Accueil

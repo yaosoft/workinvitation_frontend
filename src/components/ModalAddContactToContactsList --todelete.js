@@ -12,7 +12,7 @@ import {
 	LoadingOutlined
 } from '@ant-design/icons';
 
-const ModalAddContact = ( params ) => {
+const ModalAddContactToContactsList = ( params ) => {
 
 	var newContact = {};
 	
@@ -20,28 +20,32 @@ const ModalAddContact = ( params ) => {
 		notification.success({
 			message: `${message}`,
 			duration: 3,
-			description: 'Contact Added!',
+			description: 'contacts added!',
 			placement: 'topRight',
 		});
 	};
 
-	// Contact email
+	// contactsListContact email
 	const [ email, setEmail ] = useState( '' );
 	const handleChangeEmail = ( e ) => {	
 		setEmail( e.target.value );
 	}
 		
-	// Contact nom
+	// contact nom
 	const [ name, setName ] = useState( '' );
 	const handleChangeName = ( e ) => {	
 		setName( e.target.value );
 	}
+
+// console.log( params );
+	// contacts list id
+	const [ contactsListId, setContactsListId ] = useState( params.params.contactsListId );	
 	
 	// 
-	const { setContact, contact } 	= useContext( SiteContext );
-	const { setContacts, contacts } = useContext( SiteContext );
+	const { setContactsListContact, contactsListContact } 	= useContext( SiteContext );
+	const { setContactsListContacts, contactsListContacts } = useContext( SiteContext );
 	
-	// Add Contact
+	// Add contact
 	const handleClickContact = () => {
 		// check if contact already exist
 
@@ -60,29 +64,29 @@ const ModalAddContact = ( params ) => {
 		}
 		
 		// duplicate verification
-		const check = contacts.filter( e => e.name == name && e.email == email );
-console.log( 'check', check );
+		const check = contactsListContacts.filter( e => e.name == name && e.email == email );
+// console.log( 'check', check );
 		if( check.length ){
 			message.error( 'This contact already exists!' );
 			window.document.getElementById( 'closeModal' ).click(); // Todo: react way
 			return;
 		}
 			
-
+		
 		const rd = Math.floor(Math.random() * 1000000000);
 		newContact = {
-			name: name,
-			email: email,
-			uid: 'create_' + rd,
+			name: 			name,
+			email: 			email,
+			uid: 			'create_' + rd,
+			contactId: 		'',
+			contactsListId: contactsListId
 		}
 
-		setContact( newContact );
-		const conts = contacts;
+		setContactsListContact( newContact );
+		const conts = contactsListContacts;
 		conts.push( newContact );
-		setContacts( conts );
-
-console.log( 'conts', conts );
-
+		setContactsListContacts( conts );
+		
 		openNotificationContactSuccess( 'Success' );
 		
 		window.document.getElementById( 'closeModal' ).click(); // Todo: react way
@@ -106,13 +110,10 @@ console.log( 'conts', conts );
 	}
 	
 
-	// useEffect(() => {
-// console.log( 'newContact', newContact );
-		// if( newContact.email == null )
-			// return
-		
-		// setContact( newContact );
-	// }, [ newContact ] );
+	useEffect(() => {
+		// if( contactsListContacts.length == 0 )
+			// setContactsListContacts( [] );
+	}, [ newContact ] );
 
 	return (
 		<>
@@ -121,7 +122,7 @@ console.log( 'conts', conts );
 					<div class="modal-dialog" role="document">
 						<div class="modal-content">
 							<div class="modal-header">
-								<h5 class="modal-title" id="contactAddModalLabel">Add a Contact</h5>
+								<h5 class="modal-title" id="contactAddModalLabel">Add a contactsListContact</h5>
 								<button id="closeModal" type="button" class="close" data-dismiss="modal" aria-label="Close">
 									<span aria-hidden="true">&times;</span>
 								</button>
@@ -129,7 +130,7 @@ console.log( 'conts', conts );
 							<div class="modal-body">
 								<form>
 									<div class="form-group">
-										<label for="recipient-name" class="col-form-label">Recipient Name:</label>
+										<label for="recipient-name" class="col-form-label">contact name:</label>
 										<input 
 											value 		= { name }
 											onChange 	= { e => handleChangeName( e ) }
@@ -157,7 +158,7 @@ console.log( 'conts', conts );
 									class	= "btn btn-success"
 									onClick = { e => handleClickContact( e ) }
 								>
-									Add a Contact
+									Add a contacts
 								</button>
 							</div>
 						</div>
@@ -168,4 +169,4 @@ console.log( 'conts', conts );
 	);
 };
 
-export default ModalAddContact;
+export default ModalAddContactToContactsList;

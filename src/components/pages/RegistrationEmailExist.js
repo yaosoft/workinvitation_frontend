@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, Link, useLocation  } from 'react-router-dom';
 import { AuthContext } from "../../context/AuthProvider";
-import { ProjectContext } from "../../context/Project";
 import { Space, Spin, Button, notification, message, Popconfirm } from 'antd';
 import {
 	RadiusBottomleftOutlined,
@@ -11,12 +10,9 @@ import {
 	LoadingOutlined
 } from '@ant-design/icons';
 
-const Registration = ( params ) => {
-	const searchParams = new URLSearchParams( window.location.search );
-	const [ userEmail, setUserEmail ] 	= useState( searchParams.get( 'email' ) );
+const RegistrationEmailExist = ( params ) => {
 
-	const { isValidPassword }			= useContext( AuthContext );
-	const { updateUserProjectStatus }	= useContext( ProjectContext );
+	const { isValidPassword }	= useContext( AuthContext );
 	const [ subscribeSpin, setSubscribeSpin ] 	= useState( 'none' );
 
 	// subscribe email
@@ -30,6 +26,7 @@ const Registration = ( params ) => {
 	const handleChangeSubscribePassword = ( e ) => {	
 		setSubscribePassword( e.target.value );
 	}
+		
 
 	// post data definition
 	async function postData( url, data, method ) {
@@ -49,8 +46,8 @@ const Registration = ( params ) => {
 			return response.json(); // parses JSON response into native JavaScript objects
 		}
 	}
-
-
+	
+	
 	// Email regex
 	const regexEmailValidation = /^[a-zA-Z0-9. _-]+@[a-zA-Z0-9. -]+\.[a-zA-Z]{2,4}$/; 
 	// const regexPasswordValidation = /(\d+[a-zA-Z!\*\-\+&éàçè\'\(\)ç]*){6,100}/
@@ -66,82 +63,42 @@ const Registration = ( params ) => {
 
 		if( !subscribeEmail ){
 			message.error( 'Email address is missing.' );
-			setSubscribeSpin( 'none' );
 			return
 		}
 
 		if( !regexEmailValidation.test( subscribeEmail ) ) {
 			message.error( 'Email address is not valide.' );
-			setSubscribeSpin( 'none' );
 			return
 		}
 		// validation registration password
 		if( !subscribePassword ){
 			message.error( 'Type a password please.' );
-			setSubscribeSpin( 'none' );
 			return
 		}
 		if( isValidPassword( subscribePassword ) !== true ) {
 			message.error( 'Password must have 6 to 100 characters, upper and lower case letters and at least one number.', [6] );
-			setSubscribeSpin( 'none' );
 			return
 		}
 		
 		// Post
-		// const base_api_url	= 'http://localhost/diamta/projects/public/index.php/api/'; 
-		const base_api_url		= 'https://diamta.com/projects/public/index.php/api/'
-		const signupApiURL 		= base_api_url + 'user/registration';
+		const signupApiURL = 'http://localhost/diamta/projects/public/index.php/api/user/registration';
 		const method = 'POST';
 		const subscribeData = {
 			password: 	subscribePassword,
 			email: 		subscribeEmail
 		};
 		
-		const userId = await postData( signupApiURL, subscribeData, method );
-		if( !userId ){
+		const resp = await postData( signupApiURL, subscribeData, method );
+		if( !resp ){
 			setSubscribeSpin( 'none' );
 			message.error( 'User already exists' );
-			setSubscribeSpin( 'none' );
 			return
 		}
-
-alert( userId );
-
-		// update user id for entity projectUserStatus 
-		if( userEmail ){
-			const resp = await updateUserProjectStatus( userId, userEmail );
-alert( resp );
-			if( !resp ){
-				alert( 'error' );
-			}
-		}
-
+		
 		// goto validation
 		const validationPath	= '/login';
 					
 		navigate( validationPath );
-	}
-
-	// build email input
-	const BuildEmailInput = () =>{
-
-		if( !userEmail ){
-			return(
-				<input 
-					onChange 	= {handleChangeSubscribeEmail}
-					value 		= {subscribeEmail}
-					className	= "form-control" 
-					type		= "email" 
-					placeholder = "Email" 
-				/>
-			)
-		}
-		else{
-			setSubscribeEmail( userEmail );
-			return(
-				<>{userEmail}</>
-			)
-		}
 	}
 
 	useEffect(() => {
@@ -162,7 +119,13 @@ alert( resp );
 										<h4 class="text-center">Registration</h4>
 										<form class="mt-5 mb-5 login-input">
 											<div class="form-group">
-												<BuildEmailInput />
+												<input 
+													onChange 	= {handleChangeSubscribeEmail}
+													value 		= {subscribeEmail}
+													className	= "form-control" 
+													type		= "email" 
+													placeholder = "Email" 
+												/>
 											</div>
 											<div class="form-group">
 												<input 
@@ -209,4 +172,4 @@ alert( resp );
 	);
 };
 
-export default Registration;
+export default RegistrationEmailExist;

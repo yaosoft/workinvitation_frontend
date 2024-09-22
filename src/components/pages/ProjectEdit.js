@@ -9,37 +9,50 @@ import { ProjectContext } from '../../context/Project';
 import { SiteContext } from '../../context/site';
 import { AuthContext } from '../../context/AuthProvider';
 
-import '../../sidebarOverrides.css';
+import '../../antOverrides.css';
 import ModalAddContact from '../ModalAddContact';
 import ModalEditContact from '../ModalEditContact';
-import { Space, Spin, Button, notification, message, Popconfirm, Select, Radio, Flex, DatePicker } from 'antd';
-import { InboxOutlined } from '@ant-design/icons';
+import ModalSelectContact from '../ModalSelectContact';
+
+import { Space, Spin, Button, notification, message, Popconfirm, Radio, Flex, DatePicker, Upload } from 'antd';
 import {
 	RadiusBottomleftOutlined,
 	RadiusBottomrightOutlined,
 	RadiusUpleftOutlined,
 	RadiusUprightOutlined,
-	LoadingOutlined
+	LoadingOutlined,
+	InboxOutlined, 
+	QuestionCircleOutlined
 } from '@ant-design/icons';
 
-import { Upload } from "antd";
+import { Form, Input, Select } from 'antd';
+
+import moment from 'moment/min/moment-with-locales';
+import Moment from 'react-moment';
 
 // text area
 import { tinymce, Editor } from "@tinymce/tinymce-react";
 
 import '../../sidebarOverrides.css';
 import '../../tinymceOverrides.css';
-const SentProjectEdit = ( params ) => {
+const ProjectEdit = ( params ) => {
 	
+	// TextArea
+	const { TextArea } = Input;
+	
+	// today
+	const [ today, setToday ] = useState( '' );
+
 	// get the project id in query params
 	const [searchParams, setSearchParams] = useSearchParams();
-	const projectId = searchParams.get( 'projectId' );
+	const [ projectId, setProjectId ] = useState( searchParams.get( 'projectId' ) );
 
-console.log( 'projectId', projectId );
 	// get the project
-	const [ project, setProject ] = useState( {} );
+	const [ project, setProject ] 		= useState( {} );
+	const [ pageType, setPageType ] 	= useState( '' );
+	const [ pageTitle, setPageTitle ] 	= useState( '' );
 
-	const { getProject } = useContext( ProjectContext );
+	const { getProject, getProjectInvitations } = useContext( ProjectContext );
 
 	// Get the user
 	const { getUser } = useContext( AuthContext );
@@ -52,51 +65,56 @@ console.log( 'projectId', projectId );
 	const { getCategory, postProject } = useContext( ProjectContext );
 	const [ categories, setCategories ]  = useState( [] ); 
 	const [ categoryExpanded, setCategoryExpanded ] = useState( false );
-	const categorySelectDefault = 'Select a Category';
-	const [ categorySelected, setCategorySelected ] = useState( categorySelectDefault );
+	const [ CategoryDefault, setCategoryDefault ] = useState( 'Select a Category' );
+	const [ categorySelected, setCategorySelected ] = useState( '' );
 	const handleClickCategoryExpanded = ( event ) => {
 		
 		setCategoryExpanded( !categoryExpanded );
 	}
 	const handleChangeCategorySelected = ( value ) => {
-		setCategorySelected( `${value}` );
+		// const categoryLabel = categories.filter( e => e.id == value )[ 0 ].title;
+		setCategorySelected( value );
 	}
 
 	// Project Subject
-	const [ subject, setSubject ] = useState( project.title );
+	const [ subject, setSubject ] = useState( '' );
 	const handleChangeSubject = ( event ) => {
 
 		setSubject( event.target.value );
 	}
 
 	//  Project Description  ( tinymce textarea )
-	const [value, setValue]  = useState("Ok");
-	const [text, setText] 	 = useState("");
-	const defaultDescription = 'Your Project details...';
-	const onEditorInputChange = (newValue, editor) => {
-		setValue(newValue);
-		setText(editor.getContent({ format: "text" }));
-	}
+	const [ descriptionValue, setDescriptionValue ]	= useState( '' );
+	// const [ text, setText ]		= useState("");
+	const [ defaultDescription, setDefaultDescription ] = useState( 'Your Project details...' );
+	// const onEditorInputChange = (newValue, editor) => {
+		// setDescriptionValue(newValue);
+		// setText(editor.getContent({ format: "text" }));
+	// }
+
+	const handleChangeDescription = ( e ) => {
+		setDescriptionValue( e.target.value );
+	} 
 
 	// Select Project Type
-	const { getType } 		= useContext( ProjectContext );
-	const [ types, setTypes ] = useState( [] ); 
-	const [ typeExpanded, setTypeExpanded ] = useState( false );
-	const typeSelectedDefault = 'Select a Project Type'; 
+	const { getType } 							= useContext( ProjectContext );
+	const [ types, setTypes ] 					= useState( [] ); 
+	const [ typeSelectedDefault, setTypeSelectedDefault ] = useState( 'Select a Project Type' ); 
 	const [ typeSelected, setTypeSelected ] = useState( typeSelectedDefault );
 	const handleChangeTypeSelected = ( type ) => {
 		setTypeSelected( type );
 	}
 
 	// Project Length
-	const lengthSelectedDefault = 'Estimate Length'; 
+	const { getDuration } 						= useContext( ProjectContext );	
+	const [ lengthOptions, setLengthOptions  ]  = useState( [] );
+	const [ lengthSelectedDefault, setLengthSelectedDefault ] = useState( 'Estimate Length' );
 	const [ lengthSelected, setLengthSelected ] = useState( lengthSelectedDefault );
-	const lengthOptions = [ { id: 1, title: 'One week' }, { id: 2, title: 'Two weeks' }, { id: 4, title: 'One month' }, { id: 5, title: 'Two months' }, { id: 6, title: 'Three months' }, { id: 7, title: 'More' } ];
-	const handleChangeLengthSelected = ( length ) => {
+	const handleChangeLengthSelected 			= ( length ) => {
 		setLengthSelected( length );
 	}
 
-	// Select Project Workers
+	// Select Project type of Workers to invite
 	const [ workersExpanded, setWorkersExpanded ] = useState( false );
 	const workersDefault = 'Single or Multiple Worker';
 	const [ workersSelected, setWorkersSelected ] = useState( workersDefault );
@@ -111,6 +129,12 @@ console.log( 'projectId', projectId );
 	const handleChangeBudget = ( e ) => {
 		setBudget( e.target.value );
 	}
+
+	// Project Files on the server
+	const [ projectFiles, setProjectFiles ] = useState( [] );
+
+	// project's invitatins ( Edit )
+	const [ invitations, setInvitations ] = useState( [] );
 
 	// Select Contact List
 	// const [ contactListExpanded, setContactListExpanded ] = useState( false );
@@ -130,6 +154,9 @@ console.log( 'projectId', projectId );
 	// const [ contacts, setContacts ] 		= useState( [] );
 	const [ editContact, setEditContact ]	= useState( [] );
 
+	// Date
+	const [ defaultDate, setDefaultDate ]  = useState( 'Send today' ); 
+	
 	// Build contacts
 	const BuildContacts = () => {
 		return(
@@ -184,24 +211,34 @@ console.log( 'projectId', projectId );
 		)
 	}
 
-	// File upload
-	const [fileList, setFileList] = useState([]);
-	const [uploading, setUploading] = useState(false);
-	
 	const { Dragger } = Upload;
+	// File upload
+	// const [fileList, setFileList] = useState([]);
+	const [ uploading, setUploading ] = useState(false);
+	
+	const [ fileList, setFileList ] = useState([]);
+	// const [ fileListToPost, setFileListToPost ] = useState( [] );
+
 	const props = {
+		fileList: fileList,
 		multiple: true,
 		onChange(info) {
-			const { status } = 'success';
-			
-			if (status !== 'uploading') {
-			  console.log(info.file, info.fileList);
-			}
-			if (status === 'done') {
-			  message.success(`${info.file.name} file uploaded successfully.`);
-			} else if (status === 'error') {
-			  message.error(`${info.file.name} file upload failed.`);
-			}
+			info.file.status = 'success';
+			let newFileList = [...info.fileList];
+			setFileList( newFileList );
+			console.log(info.file, info.fileList);
+
+			// if (status == 'success') {
+				// let newFileList = [...info.fileList];
+				// setFileList( newFileList );
+				// console.log(info.file, info.fileList);
+			// }
+			// if (status === 'done') {
+				// message.success(`${info.file.name} file uploaded successfully.`);
+			// } 
+			// else if (status === 'error') {
+				// message.error(`${info.file.name} file upload failed.`);
+			// }
 		},
 		onDrop(e) {
 			console.log('Dropped files', e.dataTransfer.files);
@@ -211,16 +248,20 @@ console.log( 'projectId', projectId );
 	// Invitation sending date
 	const [ sendingDate, setSendingDate ] = useState('');
 	const onDateChange = ( date, dateString ) => {
-		setSendingDate( dateString );
+
+		const sendingDate = moment(today).isAfter( date ) ? today : date;
+
+		setSendingDate( sendingDate );
 		console.log(date, dateString);
 	};
 
 	// send 
-	const sendProject = async() => {
+	const sendProject = async( type ) => {
+
 		const postData = {}; 
 		
 		// Category 
-		if( !categorySelected || categorySelected == categorySelectDefault ){
+		if( type == 'saveSend' && ( !categorySelected || categorySelected == CategoryDefault ) ){
 			message.error( 'Select a category' );
 			return;
 		}
@@ -231,53 +272,82 @@ console.log( 'projectId', projectId );
 			message.error( 'Type a title' );
 			return;
 		}
-// setText( 'Test text' );
+
 		// Description 
-		if( !text || text == defaultDescription ){
+		if( type == 'saveSend' && !descriptionValue ){
 			message.error( 'Type a description' );
 			return;
 		}
-		
+
 		// Project type
-		if( !typeSelected || typeSelected == typeSelectedDefault ){
-			message.error( 'Select  type' );
+		if( type == 'saveSend' && ( !typeSelected || typeSelected == typeSelectedDefault ) ){
+			message.error( 'Select a Project Type' );
 			return;
 		}
-		
+
 		// Project Length
-		if( !lengthSelected || lengthSelected == lengthSelectedDefault ){
+		if( type == 'saveSend' && ( !lengthSelected || lengthSelected == lengthSelectedDefault ) ){
 			message.error( 'Select a project lenght' );
 			return;
 		}
 
-		// Project Length
-		if( !contacts.length ){
-			message.error( 'Add some contacts' );
+		// Project contacts
+		if( type == 'saveSend' && !contacts.length ){
+			message.error( 'Add contacts to invite' );
 			return;
+		}
+
+		// Sending date
+		if( type == 'saveSend' && !sendingDate ){
+			setSendingDate( today );
 		}
 
 		postData[ 'category' ] 		= categorySelected; 
 		postData[ 'title' ] 		= subject; 
-		postData[ 'description' ] 	= text; 
-		postData[ 'type' ] 			= typeSelected;
+		postData[ 'description' ] 	= descriptionValue; 
+		postData[ 'type' ] 			= typeSelected;	// project type
 		postData[ 'budget' ] 		= budget;	// true / false
-		postData[ 'length' ] 		= lengthSelected;
+		postData[ 'length' ]		= lengthSelected;
 		postData[ 'sendingDate' ] 	= sendingDate;
 		postData[ 'invitations' ] 	= JSON.stringify(contacts);
 		postData[ 'userId' ] 		= getUser().userId;
+		postData[ 'projectId' ] 	= '';
+		postData[ 'toSave' ] 		=  type == 'save' ? true : false;	// save + send vs save
 		
+		if( pageType == 'edit' ){
+			postData[ 'projectId' ] = projectId;
+		}
+
+		// remove files that already exist on the server before post
+		var fileListToPost = [];
+		// if( pageType == 'edit' ){
+			fileListToPost = fileList.filter( e => e.status != 'done' )
+		// }
+
+		// list of files to delete on the server
+		var filesToDelete = [];
+		if( pageType == 'edit' ){
+			const filesUIDList 	= fileList.map( e => e.uid );
+
+			filesToDelete = projectFiles.filter( e => !filesUIDList.includes( e.uid ) ).map( f => f.id );
+		}
+
+		postData[ 'filesToDelete' ] = filesToDelete;
 
 		// POST
 		setUploading(true);
-		setFileList([]);
-		const rep = postProject( postData, fileList );
-		if( !rep ){
+		const rep = await postProject( postData, fileListToPost );
+
+		if( isNaN( rep ) ){
 			message.error( 'upload failed.' );
 		}
 		else{
+			setProjectId( rep );
 			message.success( 'upload successfully.' );
 		}
 		setUploading(false)
+
+		// setFileList([]);
 	}
 
 	// create contact list
@@ -297,14 +367,14 @@ console.log( 'projectId', projectId );
 
 	// get project's categories
 	useEffect( () => {
-		
+
 		const getCategoryList = async () => {
 			const categoryList = await getCategory();
 			
 			setCategories ( categoryList );
 		}
 		getCategoryList();
-		
+
 		// get project's types
 		const getTypeList = async () => {
 			const typeList = await getType();
@@ -312,17 +382,100 @@ console.log( 'projectId', projectId );
 		}
 		getTypeList();
 
+		// get project's durations
+		const getDurationList = async () => {
+			const durationList = await getDuration();
+			setLengthOptions ( durationList );
+		}
+		getDurationList();
+
 	}, [] );
 
-	// get the project
+	// get the project if edit
 	useEffect( () => {
-	
-		const getProjectData = async () => {
-			const data = await getProject( projectId );
-console.log( 'getProject', data );
-			setProject ( data );
+
+		const pageType = projectId == 0 ? 'new' : 'edit';
+
+		setPageType( pageType );
+
+		const pageTitle = pageType == 'edit' ? 'Edit a Project' : 'Create a New Project';
+		setPageTitle( pageTitle );
+
+		if( pageType == 'edit' ){
+			const getProjectData = async () => {
+
+				const data = await getProject( projectId, 0, 0 ); //  projectId, projectStatus, userId
+
+				setProject ( data );
+
+				// category
+				setCategorySelected( data.categoryId );
+				setCategoryDefault( data.categoryTitle );
+
+				// title
+				setSubject( data.title );
+				
+				// description
+				setDescriptionValue( data.description );
+
+				// ptoject type
+				setTypeSelectedDefault( data.projectTypeTitle );
+				setTypeSelected( data.projectTypeId );
+				
+				// budget
+				setBudget( data.budget );
+				
+				// duration
+				setLengthSelectedDefault( data.durationTitle );
+				setLengthSelected( data.durationId );
+
+				// Get project Invitations
+				const getInvitationList = async () => {
+					const invitations = await getProjectInvitations( getUser().userId, projectId );	
+					const contactArr = await invitations.map( e => ( 
+					{ 
+						name: 	e.receiverName, 
+						email: 	e.receiverEmail, 
+						id: 	e.id,
+						uid:	'edit_' + e.id, 
+					} ) );
+
+					setContacts( contactArr );
+				}
+				getInvitationList();
+
+				// date
+				const date 	= data.date;
+				const today = data.today;
+				const sendingDate = moment(today).isAfter( date ) ? today : date;
+			
+				setSendingDate( sendingDate );
+				setDefaultDate( sendingDate );
+				setToday( today );
+
+				// files
+				const projectFiles = data.files;
+				const files = projectFiles.map ( ( file, key ) => ( {
+					"uid": "rc-upload-" + projectId + "-" + key,
+					"id": file.id,
+					"lastModified": 1712629873826,
+					"lastModifiedDate": file.dateCreated,
+					"name": file.name,
+					"size": file.size,
+					"type": file.extension,
+					"path": file.path,
+					"percent": 100,
+					"originFileObj": {
+						"uid": "rc-upload-" + projectId + "-" + key,	// fake
+					},
+					"status": "done"
+				}) )
+				
+				setFileList( files );		// can change
+				setProjectFiles( files ); 	// save
+			}
+			getProjectData();
 		}
-		getProjectData();
 	}, [ projectId ] );
 
 
@@ -335,12 +488,13 @@ console.log( 'getProject', data );
 			<div className="content-body">
 				<ModalAddContact />
 				<ModalEditContact />
+				<ModalSelectContact />
 				<Breadcrumbs />
 				
 				<div className="container-fluid">
                 <div className="row">
                     <div className="col-lg-12">
-					<h3>Edit / create a new Project</h3>
+					<h3>{ pageTitle }</h3>
 					<br />
                         <div className="card">
                             <div className="card-body" style={{  paddingTop: '0px' }}>
@@ -352,7 +506,8 @@ console.log( 'getProject', data );
 												<div className="btn-group show" role="group">
 														<Select
 																size 		 	= 'middle'
-																defaultValue	= { categorySelectDefault }
+																defaultValue	= { CategoryDefault }
+																value			= { categorySelected }
 																onChange		= { handleChangeCategorySelected }
 																style={{
 																	width: 200,
@@ -374,16 +529,15 @@ console.log( 'getProject', data );
 												/>
                                             </div>
                                             <div className="form-group">
-                                                <Editor 
-													className 	= "textarea_editor form-control bg-light" 
-													rows		= "15" 
-													// onChange	= { e => handleChangeDescription( e ) }
-													apiKey		= 'yr2i0pu19xdsekckkz7snhi63ool3vsbgmbvoxxgxrr4kpp5' // your api
-													
-													onEditorChange	= {(newValue, editor) => onEditorInputChange(newValue, editor)}
-													onInit			= {(evt, editor) => { setText(editor.getContent({ format: "html" })) } }
-													value			= {value}
-													initialValue	= { defaultDescription }
+												<TextArea 
+													rows			= { 15 }
+													defaultValue 	= { defaultDescription }
+													value 			= { descriptionValue }
+													onChange 		= { ( e ) => handleChangeDescription( e ) }
+													type			= "text" 
+													className		= "form-control" 
+													id				= "description" 
+													placeholder 	= "Job description"
 												/>
 
                                             </div>
@@ -412,6 +566,7 @@ console.log( 'getProject', data );
 													<Select
 														size 		 	= 'middle'
 														defaultValue	= { typeSelectedDefault }
+														value 			= { typeSelected }
 														onChange		= { handleChangeTypeSelected }
 														style			= {{
 															width: 200,
@@ -444,6 +599,7 @@ console.log( 'getProject', data );
 													<Select
 														size 		 	= 'middle'
 														defaultValue	= { lengthSelectedDefault }
+														value			= { lengthSelected }
 														onChange		= { handleChangeLengthSelected }
 														style={{
 															width: 200,
@@ -462,40 +618,89 @@ console.log( 'getProject', data );
 												data-target		= "#contactAddModal"
 												style			= {{ padding: '2px 18px' }}
 											>
-												Add a Guest
+												Add a Contact
 												<span className="btn-icon-right">
 													<i className="fa fa-plus"></i>
+													<i className="fa fa-user"></i>
+												</span>
+											</button>
+											&nbsp;
+											<button 
+												type			= "button" 
+												className		= "btn btn-ligth" 
+												data-toggle		= "modal" 
+												data-target		= "#contactSelectModal"
+												style			= {{ padding: '2px 18px' }}
+											>
+												Select an Existing Contacts
+												<span className="btn-icon-right">
+													<i className="fa fa-list"></i>
+													<i className="fa fa-user"></i>
+												</span>
+											</button>
+											&nbsp;
+											<button 
+												type			= "button" 
+												className		= "btn btn-ligth" 
+												data-toggle		= "modal" 
+												data-target		= "#contactSelectModal"
+												style			= {{ padding: '2px 18px' }}
+											>
+												Select a Contact List
+												<span className="btn-icon-right">
+													<i className="fa fa-list"></i>
 													<i className="fa fa-user"></i>
 												</span>
 											</button>
 											<span className="btn-icon-right">
 											</span>
 											&nbsp;
-											<div className="btn-group show" role="group">
-													<Space direction="vertical">
-														<DatePicker 
-															onChange = { ( date, dateString ) => onDateChange( date, dateString ) } 
-															placeholder={["Send today"]}
-														/>
-													</Space>
-												&nbsp;
-											</div>
 											<div><BuildContacts /></div>
 										</div>
                                     </div>
 									<div className="row" style={{  marginTop: '10px' }}></div>
                                     <div className="text-left m-t-15">
-										<h6><b>4- Action</b></h6>
-                                        <button 
-											className = "btn btn-success m-b-30 m-t-15 f-s-14 p-l-20 p-r-20 m-r-10" 
-											type	= "button"
-											onClick	= { sendProject }
-										>
-											<i className="fa fa-paper-plane m-r-5"></i> Save and Send
-										</button>
-										&nbsp;
-										&nbsp;<button className="btn btn-danger m-b-30 m-t-15 f-s-14 p-l-20 p-r-20 m-r-10" type="button"><i className="fa fa-trash m-r-5"></i> Clear</button>
-                                    </div>
+										<h6><b>4- Send</b></h6>
+										<div className="btn-group show" role="group" style={{ marginTop: '5px' }}>
+											<Space direction="vertical">
+												Sending Date
+												<DatePicker 
+													onChange = { ( date, dateString ) => onDateChange( date, dateString ) } 
+													placeholder={ [ defaultDate ] }
+												/>
+											</Space>
+											&nbsp;
+											<Popconfirm
+												title = "Delete the task"
+												description = "Do you want to save your project and continue later with sending?"
+												icon = {
+													<QuestionCircleOutlined
+														style = {{
+															color: 'blue',
+														}}
+													/>
+												}
+												onConfirm = { e => sendProject( 'save' ) }
+											>
+  
+												<button 
+													className = "btn btn-info m-b-30 m-t-15 f-s-14 p-l-20 p-r-20 m-r-10" 
+													type	= "button"
+												>
+													<i className="fa fa-database m-r-5"></i> Save
+												</button>
+											</Popconfirm>
+											&nbsp;
+											<button 
+												className = "btn btn-success m-b-30 m-t-15 f-s-14 p-l-20 p-r-20 m-r-10" 
+												type	= "button"
+												onClick	= { e => sendProject( 'saveSend' ) }
+											>
+												<i className="fa fa-database m-r-5"></i><i className="fa fa-paper-plane m-r-5"></i> Save and Send
+											</button>
+											&nbsp;
+										</div>
+								   </div>
                                 </div>
                             </div>
                         </div>
@@ -507,4 +712,4 @@ console.log( 'getProject', data );
 		</>
 	);
 };
-export default SentProjectEdit;
+export default ProjectEdit;
