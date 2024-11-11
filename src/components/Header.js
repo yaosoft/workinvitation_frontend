@@ -67,7 +67,7 @@ const Header = ( params ) => {
 
 		navigate( '/login' )
 	}
-	
+
 	return (
 		<>
 		<SecuredPagesAuth />

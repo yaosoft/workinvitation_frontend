@@ -217,6 +217,17 @@ export const ProjectProvider = ({ children }) => {
 	};
 
 	const backendServer = 'http://localhost/diamta/projects/public';
+	
+	// send an invitation
+	const invitationResend = async ( projectId, email ) => {
+		const url		= base_api_url +  'invitation/resend/?projectId=' + projectId + '&email=' + email;
+		const data 		= {};
+		const method	= 'GET';
+		
+		const projects = await fetchData( url, data, method );
+
+		return projects;
+	}
 
 	return (	
 	
@@ -235,7 +246,8 @@ export const ProjectProvider = ({ children }) => {
 				isOwner,
 				getProjectStatus,
 				backendServer,
-				updateUserProjectStatus
+				updateUserProjectStatus,
+				invitationResend
 			}}
 		>
 		

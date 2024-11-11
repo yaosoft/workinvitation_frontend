@@ -38,7 +38,7 @@ const SentProjects = ( params ) => {
                             </div><span className="star-toggle ti-star"></span>
                         </div>
                         <div className="col-mail col-mail-2">
-                            <div className="subject">{ project.title }</div>
+                           
                             <div className="date">{ project.date }</div>
                         </div>
                     </Link>

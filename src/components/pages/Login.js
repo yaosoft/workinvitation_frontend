@@ -46,16 +46,19 @@ const Login = ( params ) => {
 
 		if( !loginEmail ){
 			message.error( 'Email address is missing.' );
+			setLoginSpin( 'none' );
 			return
 		}
 
 		if( !regexEmailValidation.test( loginEmail ) ) {
 			message.error( 'Email address is not valide.' );
+			setLoginSpin( 'none' );
 			return
 		}
 		// validation registration password
 		if( !loginPassword ){
 			message.error( 'Type a password please.' );
+			setLoginSpin( 'none' );
 			return
 		}
 		// if( isValidPassword( loginPassword ) !== true ) {
@@ -159,7 +162,9 @@ const Login = ( params ) => {
 													type		= "password" 
 													placeholder	= "Password" 
 												/>
+												<Link to='/password/forgot'>Password Forgot?</Link>
 											</div>
+											
 											<button 
 												class	= "btn login-form__btn submit w-100"
 												onClick	= {handleClickLogin}

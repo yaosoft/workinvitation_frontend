@@ -14,13 +14,15 @@ const SecuredPagesAuth = () => {
 		'/project/view',
 		'/project/received',
 		'/contacts-list/create',
+		'/contacts-list/list',
+		'/profile/edit',
+		'profile/password/change',
 	]
 
 	const location 		= useLocation();
 	const currentPage 	= location.pathname;
 
 	const [ authenticate, setAuthenticate ] = useState( isAuthenticated() );
-
 	useEffect(() => {
 		if( ( securedPagesPath.filter( ( path ) => currentPage.includes( path ) ).length  ) && !authenticate ) {
 			setReferrer( currentPage );

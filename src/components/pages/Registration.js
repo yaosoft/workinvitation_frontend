@@ -105,12 +105,12 @@ const Registration = ( params ) => {
 			return
 		}
 
-alert( userId );
+// alert( userId );
 
 		// update user id for entity projectUserStatus 
 		if( userEmail ){
 			const resp = await updateUserProjectStatus( userId, userEmail );
-alert( resp );
+// alert( resp );
 			if( !resp ){
 				alert( 'error' );
 			}

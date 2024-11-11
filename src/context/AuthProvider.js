@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types'
 import { createContext, useState, useEffect } from 'react'
+import { useNavigate, Link, useLocation  } from 'react-router-dom';
 
 export const AuthContext = createContext();
 
@@ -36,8 +37,12 @@ export const AuthProvider = ({ children }) => {
 	}
 
 	// get the user
+	// const navigate = useNavigate();
 	const getUser = () => {
-		return user
+		if( user == null )
+			window.document.location.replace( '/login' );
+		else
+			return user
 	}
 	
 	// delete the user

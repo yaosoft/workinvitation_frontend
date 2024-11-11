@@ -13,8 +13,8 @@ export const SiteContext = createContext();
 
 export const SiteProvider = ({ children }) => {
 
-	const base_api_url	= 'http://localhost/diamta/projects/public/index.php/api/'; 
-	// const base_api_url		= 'https://diamta.com/projects/public/index.php/api/'
+	// const base_api_url	= 'http://localhost/diamta/projects/public/index.php/api/'; 
+	const base_api_url		= 'https://diamta.com/projects/public/index.php/api/'
 	
 	// spiner
 	const [ spiner, setSpiner ] = useState( 'none' );
@@ -62,7 +62,8 @@ export const SiteProvider = ({ children }) => {
 	}
 	
 	// get site url
-	const siteURL = 'https://www.237usa.com';
+	// const siteURL = 'https://diamta.com/projects/public/';
+	const siteURL = 'http://localhost/diamta/projects/public/';
 	
 	// contact to invite
 	const [ contact, setContact ] = useState( {} );
@@ -134,8 +135,63 @@ export const SiteProvider = ({ children }) => {
 		return resp;
 	}
 
-	return (	
-	
+	// Get user profile
+	const userProfileGet = async ( userId ) => {
+		const url 		= base_api_url + 'profile/get/?userId=' + userId;
+		const method 	= 'GET';
+		const data 		= {};
+		const resp 		= await fetchData( url, data, method );
+		return resp;
+	}
+
+	// save user profile
+	const userProfileSave = async ( data ) => {
+		const url 		= base_api_url +  'profile/save';
+		const method 	= 'POST';
+		const resp 		= await fetchData( url, data, method );
+
+		return resp;
+	}
+
+	// save user password
+	const passwordSave = async ( data ) => {
+		const url 		= base_api_url +  'password/save';
+		const method 	= 'POST';
+		const resp 		= await fetchData( url, data, method );
+
+		return resp;
+	}
+
+	// save user profile
+	const getCurrentPassword = async ( userId ) => {
+		const url 		= base_api_url + 'password/get/?userId=' + userId;
+		const method 	= 'GET';
+		const data 		= {};
+		const resp 		= await fetchData( url, data, method );
+		return resp;
+	}
+
+	// password forgot
+	const passwordForgot = async ( data ) => {
+		const url 		= base_api_url + 'password/forgot/?email=' + data.email + '&code= ' + data.code;
+		const method 	= 'GET';
+		const resp 		= await fetchData( url, data, method );
+
+		return resp;
+	}
+
+	// password update
+	const passwordUpdate =  async ( userId, password ) => {
+
+		const url 		= base_api_url + 'password/update/?userId=' + userId + '&password=' + password;
+		const method 	= 'GET';
+		const data 		= {};
+		const resp 		= await fetchData( url, data, method );
+		return resp;
+	}
+
+	return (
+
 		<SiteContext.Provider 
 			value={{ 
 				setReferrer,
@@ -154,7 +210,13 @@ export const SiteProvider = ({ children }) => {
 				contactsListSave,
 				getContactsLists,
 				getContactsList,
-				contactsListContactsSave
+				contactsListContactsSave,
+				userProfileGet,
+				userProfileSave,
+				passwordSave,
+				getCurrentPassword,
+				passwordForgot,
+				passwordUpdate,
 			}}
 		>
 		

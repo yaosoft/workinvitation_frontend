@@ -3,17 +3,18 @@ import { useNavigate, Link, useLocation, useSearchParams } from 'react-router-do
 import Header from '../Header';
 import Footer from '../Footer';
 import Sidebar from '../Sidebar';
+import ChatBox from '../ChatBox';
+import ChatRoom from '../ChatRoom';
 import Breadcrumbs from '../Breadcrumbs';
 import { AuthContext } from '../../context/AuthProvider';
+import { ChatContext } from '../../context/Chat';
 import { ProjectContext } from '../../context/Project';
 import moment from 'moment/min/moment-with-locales';
 import Moment from 'react-moment';
 import { Modal } from 'react-responsive-modal';
 import 'react-responsive-modal/styles.css';
 import ModalViewProject from '../ModalViewProject';
-
-import '../../sidebarOverrides.css';
-import '../../chatStyles.css';
+import ModalResendInvitation from '../ModalResendInvitation';
 
 const Project = ( params ) => {
 
@@ -46,7 +47,7 @@ const Project = ( params ) => {
 	const { getUser }	= useContext( AuthContext );
 	const [ userId, setUserId ] = useState( '' );
 
-	const { isOwner, getProject, getSentInvitations, getProjectStatus, getProjectInvitations }	= useContext( ProjectContext );
+	const { isOwner, getProject, getProjectStatus, getProjectInvitations }	= useContext( ProjectContext );
 	const [ isProjectOwner, setIsProjectOwner ] = useState( '' );
 
 	// project view
@@ -60,6 +61,19 @@ const Project = ( params ) => {
 	const onCloseOpenProjectModalView 	= async () => {
 		setOpenProjectModalView(false)
 	};
+	const [ openModalInvitationResent, setOpenModalInvitationResent ] = useState(false);
+	const onOpenModalInvitationResent  	= () => setOpenModalInvitationResent(true);
+	const onCloseModalInvitationResent 	= async () => {
+		await getProjectData( projectId );
+		setOpenModalInvitationResent(false)
+	};
+	
+	const [ receiverEmail, setReceiverEmail] = useState( '' );
+	// handleClickResend
+	const handleClickResend = ( receiverEmail ) => {
+		setReceiverEmail( receiverEmail );
+		setOpenModalInvitationResent( true );
+	}
 
 	// page title
 	const BuildPageTitle = () => {
@@ -85,10 +99,9 @@ const Project = ( params ) => {
 	}
 	
 	// build invitation 
-	
 	const BuildInvitationsLine  = () => {
 		return( 
-			projectInvitation.map ( ( invitation, index ) =>
+			projectInvitation.map (( invitation, index ) =>
 				<tr key = { index }>
 					<td>{ invitation.receiverEmail }</td>
 					<td>{ invitation.receiverName ? invitation.receiverName : 'No name' }</td>
@@ -97,12 +110,13 @@ const Project = ( params ) => {
 						<span className="m-0 pl-3">{ invitation.attempts }</span>
 					</td>
 					<td>
-						<Link><i className="fa fa-paper-plane-o text-success  mr-2"></i> resend</Link>
+					<Link onClick={ e => handleClickResend( invitation.receiverEmail ) }><i className="fa fa-paper-plane-o text-success  mr-2"></i> resend</Link>
 					</td>
 				</tr>
-		))
+			)
+		)
 	}
-
+	
 	// projectId
 	useEffect( () => {
 		const getIdFromUrl = async () => {
@@ -116,51 +130,62 @@ const Project = ( params ) => {
 	useEffect( () => {
 		if( !projectId )
 			return
-		
-		const getProjectData = async () => {
-			
-			const user_id = await getUser().userId;
-			
-			setUserId( user_id );
 
-			const isowner = await isOwner( user_id, projectId );
-
-			setIsProjectOwner ( isowner );
-			
-			const projectStatus = await searchParams.get( 'projectStatus' );
-			const userId = await searchParams.get( 'userId' );
-			
-			const theproject = await getProject( projectId, projectStatus, userId  );
-			setProject ( theproject );
-			
-			const projectInvitation = await getProjectInvitations( user_id, projectId );
-// console.log( 'projectInvitation', projectInvitation );
-			setProjectInvitation( projectInvitation );
-			setCountProjectInvitation( projectInvitation.length );
-			if( projectInvitation.length )
-				setProjectInvitS( 's' )
-			
-			const getStatus = async () => {
-				const status = await getProjectStatus( projectId );
-				setProjectStatus( status );			
-			}
-		}
-		getProjectData();
+		getProjectData( projectId );
 	}, [ projectId ] );
 
-	
+
+	const getProjectData = async ( projectId ) => {
+
+		const user_id = await getUser().userId;
+
+		setUserId( user_id );
+
+		const isowner = await isOwner( user_id, projectId );
+
+		setIsProjectOwner ( isowner );
+
+		const projectStatus = await searchParams.get( 'projectStatus' );
+		const userId = await searchParams.get( 'userId' );
+			
+		const theproject = await getProject( projectId, projectStatus, userId  );
+		setProject ( theproject );
+
+		const projectInvitation = await getProjectInvitations( user_id, projectId );
+// console.log( 'theproject', theproject );
+		setProjectInvitation( projectInvitation );
+		setCountProjectInvitation( projectInvitation.length );
+		if( projectInvitation.length )
+			setProjectInvitS( 's' )
+
+		const getStatus = async () => {
+			const status = await getProjectStatus( projectId );
+			setProjectStatus( status );			
+		}
+	}
 
 	return (
+		
 		<>
+			<Header />
 			<Modal open={ openProjectModalView } onClose={ onCloseOpenProjectModalView } center>
 				<ModalViewProject params =
 					{{
 						project: project,
+						isOwner: isProjectOwner
+					}}
+				/>
+			</Modal>
+			<Modal open={ openModalInvitationResent } onClose={ onCloseModalInvitationResent } center>
+				<ModalResendInvitation params =
+					{{
+						project: 		project,
+						receiverEmail:  receiverEmail
 					}}
 				/>
 			</Modal>
 			
-				<Header />
+				
 				<Sidebar />	
 				        <div className="content-body">
 
@@ -223,81 +248,22 @@ const Project = ( params ) => {
                         </div>
                     </div>
                 </div>
-
-                <div className="row">
-                    <div className="col-lg-12">
-                        <div className="row">
-                            <div className="col-12">
-                                <div className="card">
-                                    <div className="card-body pb-0 d-flex justify-content-between">
-                                        <div style={{ width: '100%' }}>
-                                            <h4 className="mb-1">Communication and files</h4>
-                                            
-											
-											
-      <main className="cd__main">
-        
-         <section className="msger">
-  <header className="msger-header">
-    <div className="msger-header-title">
-      <i className="fas fa-comment-alt"></i> Your conversation with <b>Foo Name</b> about the project Foo title
-    </div>
-    <div className="msger-header-options close">
-      <span><i className="fas fa-cog"></i></span>
-    </div>
-  </header>
-
-  <main className="msger-chat" id="msgerchat">
-    <div className="msg left-msg">
-      <div
-       className="msg-img" style={{ backgroundImage: 'url(https://image.flaticon.com/icons/svg/327/327779.svg' }} ></div>
-
-      <div className="msg-bubble">
-        <div className="msg-info">
-          <div className="msg-info-name">Diamta</div>
-          <div className="msg-info-time"><span id='curentTime'>12:45</span></div>
-        </div>
-
-        <div className="msg-text">
-          Hi Foo UserName, welcome to your project's Chat room! Go ahead and send a message to our team.
-        </div>
-      </div>
-    </div>
-
-  </main>
-  
-  <div id='chatMsgMenu' style={{ height: '70px', padding: '5px', borderTop: '0.5px solid silver', display: 'none' }}>
-	<p id='chatMsgUserId'>Message sender</p> 
-	<p><div id='chatMsgResponse' style={{ width: '95%', border: 'none', display: 'inline-block', float: 'left' }}></div><a title='close' id='responseFinishBtn' style={{ cursor: 'pointer' }}>X</a></p>
-  </div>  
-  <div title='close' id='chatFilesPreviewContainer' style={{ height: '50px', width: '100%', display: 'inline-block', display: 'none' }}>
-  <div id='chatFilesPreview' style={{ padding: '5px', borderTop: '0.5px solid silver', width: '98%', float: 'left' }}>
-  </div><div id='chatFilesPreviewFinishBtnDiv' style={{ width: '2%', float: 'left' }}><a title='close' id='chatFilesPreviewFinishBtn' style={{ cursor: 'pointer' }}>X</a></div></div>
-  <form className="msger-inputarea" onsubmit="return false;">
-	<label for="uploader" style={{ cursor: 'pointer', fontSize: '9px', height: '31px', width: '40px' }}>  
-        <img title="Upload a file" id="profile_label" src="../../img/searchFile.png" alt="DP" style={{ position: 'relative', top: '-190%', left: '-109%' }} />
-    </label>
-    <input style={{ display: 'none' }} id="uploader" name="uploader" className="uploader" type="file" multiple />
-    <textarea  className="msger-input" style={{ whiteSpace: 'pre-wrap' }} placeholder="Enter your message..."></textarea>
-    <button className="msger-send-btn" id="sendBtn" >Send</button>
-	
-  </form>
-</section>
-       
-      </main>	
-											
-											<br />
-											
-		
-											
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-				
+				{ 
+					isProjectOwner === true ?
+						<ChatRoom 
+							params={{
+								project: project,
+								isOwner: isProjectOwner,
+							}} 
+						/>
+					:
+						<ChatBox
+							params={{
+								project: project,
+								isOwner: isProjectOwner,
+							}} 
+						/>
+				}
                 <div className="row">
                     <div className="col-lg-12">
                         <div className="card">

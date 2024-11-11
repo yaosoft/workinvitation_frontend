@@ -38,8 +38,8 @@ const Sidebar = ( params ) => {
 									<i className="fa fa-users"></i> <span className="nav-text">Contact list</span>
 								</a>
 								<ul aria-expanded="false">
-									<li><Link to="/contacts-list/list" >Contact lists</Link></li>
-									<li><Link to="/contacts-list/create" >Create a contact list</Link></li>
+									<li><Link to="/contacts-list/list" >Contacts list</Link></li>
+									<li><Link to="/contacts-list/create" >Create a contacts list</Link></li>
 								</ul>
 							</li>
 							<li className="nav-label"><span style={{ color: '#8072c9' }}>Profile info</span></li>
@@ -48,8 +48,8 @@ const Sidebar = ( params ) => {
 									<i className="fa fa-user"></i> <span className="nav-text">My Profile</span>
 								</a>
 								<ul aria-expanded="false">
-									<li><Link >Update profile</Link></li>
-									<li><Link >Change password</Link></li>
+									<li><Link to="/profile/edit">Update your Profile</Link></li>
+									<li><Link to="/profile/password/change">Change Password</Link></li>
 								</ul>
 							</li>
 							

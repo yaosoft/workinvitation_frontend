@@ -12,7 +12,7 @@ import { AuthContext } from '../../context/AuthProvider';
 import '../../sidebarOverrides.css';
 
 const ListProjects = ( params ) => {
-	
+
 	const pageTitle 	= params.params.pageTitle;
 	const pageName 		= params.params.pageName;
 	
@@ -34,22 +34,23 @@ const ListProjects = ( params ) => {
 				<div className="message">
                     <Link to={ "/project/view/?projectId=" + project.id + "&projectStatus=" + project.status + "&userId=" + userId }>
 
-							{ project.status != 5 ?
-								<b>
+							{ project.status != 5 && pageName == 'ReceivedProject' ?
 							
-									<div className="col-mail col-mail-1">
-										<div className="email-checkbox">
-											<input type="checkbox" id="chk21" />
-											<label className="toggle" for="chk21"></label>
-										</div><span className="star-toggle ti-star"></span>
-									</div>
-									<div className="col-mail col-mail-2">
-										{ project.title }
-										<div className="subject">{ project.title }</div>
-										<div className="date">{ project.date }</div>
-									</div>
+									<b>
+								
+										<div className="col-mail col-mail-1">
+											<div className="email-checkbox">
+												<input type="checkbox" id="chk21" />
+												<label className="toggle" for="chk21"></label>
+											</div><span className="star-toggle ti-star"></span>
+										</div>
+										<div className="col-mail col-mail-2">
+											{ project.title }
+											<div className="subject">{ project.title }</div>
+											<div className="date">{ project.date }</div>
+										</div>
 
-								</b>
+									</b>
 								:
 								<>
 									<div className="col-mail col-mail-1">

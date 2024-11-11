@@ -13,6 +13,7 @@ import '../../antOverrides.css';
 import ModalAddContact from '../ModalAddContact';
 import ModalEditContact from '../ModalEditContact';
 import ModalSelectContact from '../ModalSelectContact';
+import ModalSelectContactsList from '../ModalSelectContactsList';
 
 import { Space, Spin, Button, notification, message, Popconfirm, Radio, Flex, DatePicker, Upload } from 'antd';
 import {
@@ -57,7 +58,7 @@ const ProjectEdit = ( params ) => {
 	// Get the user
 	const { getUser } = useContext( AuthContext );
 
-	// Get contact from ModalAddContact component
+	// set contacts
 	const { contact, setContact } = useContext( SiteContext );
 	const { contacts, setContacts } = useContext( SiteContext );
 
@@ -130,33 +131,22 @@ const ProjectEdit = ( params ) => {
 		setBudget( e.target.value );
 	}
 
-	// Project Files on the server
+	// Project Files
 	const [ projectFiles, setProjectFiles ] = useState( [] );
 
 	// project's invitatins ( Edit )
 	const [ invitations, setInvitations ] = useState( [] );
 
-	// Select Contact List
-	// const [ contactListExpanded, setContactListExpanded ] = useState( false );
-	// const contactListDefault = 'Import Contacts from a List';
-	// const [ contactListSelected, setContactListSelected ] = useState( contactListDefault );
-	// const handleClickContactListExpanded = ( event ) => {
-		
-		// setContactListExpanded( !contactListExpanded );
-	// }
-	// const handleClickContactListSelected = ( event, contactList ) => {
-		// setContactListExpanded( false );
-		// setContactListSelected( contactList );
-	// }
-
-
 	// Contacts
 	// const [ contacts, setContacts ] 		= useState( [] );
-	const [ editContact, setEditContact ]	= useState( [] );
+	// const [ editContact, setEditContact ]	= useState( [] );
 
 	// Date
 	const [ defaultDate, setDefaultDate ]  = useState( 'Send today' ); 
-	
+
+	// Contacts bulk removal button
+	const [ buttonDisplay, setButtonDisplay ] = useState( 'none' );
+
 	// Build contacts
 	const BuildContacts = () => {
 		return(
@@ -255,7 +245,8 @@ const ProjectEdit = ( params ) => {
 		console.log(date, dateString);
 	};
 
-	// send 
+	// send
+	const navigate = useNavigate();
 	const sendProject = async( type ) => {
 
 		const postData = {}; 
@@ -313,7 +304,7 @@ const ProjectEdit = ( params ) => {
 		postData[ 'userId' ] 		= getUser().userId;
 		postData[ 'projectId' ] 	= '';
 		postData[ 'toSave' ] 		=  type == 'save' ? true : false;	// save + send vs save
-		
+
 		if( pageType == 'edit' ){
 			postData[ 'projectId' ] = projectId;
 		}
@@ -337,13 +328,21 @@ const ProjectEdit = ( params ) => {
 		// POST
 		setUploading(true);
 		const rep = await postProject( postData, fileListToPost );
-
+		
 		if( isNaN( rep ) ){
-			message.error( 'upload failed.' );
+			message.error( 'Failed to save your project.' );
 		}
 		else{
 			setProjectId( rep );
-			message.success( 'upload successfully.' );
+			
+			if( type == 'saveSend' ){
+				message.success( 'Project successfully sent.' );
+				navigate( '/project/view/?projectId=' + rep + '&projectStatus=' + 0 + '&userId=' + getUser().userId )
+			}
+			else{
+				message.success( 'Project successfully saved.' );
+				navigate( '/project/saved' )
+			}
 		}
 		setUploading(false)
 
@@ -391,9 +390,16 @@ const ProjectEdit = ( params ) => {
 
 	}, [] );
 
+	// Empty contacts list
+	const handleClickDeleteAll  = () => {
+		setContact( {} );
+		setContacts( [] )
+	}
+
 	// get the project if edit
 	useEffect( () => {
-
+		handleClickDeleteAll();
+		
 		const pageType = projectId == 0 ? 'new' : 'edit';
 
 		setPageType( pageType );
@@ -469,7 +475,7 @@ const ProjectEdit = ( params ) => {
 						"uid": "rc-upload-" + projectId + "-" + key,	// fake
 					},
 					"status": "done"
-				}) )
+				} ) )
 				
 				setFileList( files );		// can change
 				setProjectFiles( files ); 	// save
@@ -478,6 +484,13 @@ const ProjectEdit = ( params ) => {
 		}
 	}, [ projectId ] );
 
+	// Display bulk contacts delete button
+	useEffect(() => {
+		if( contacts.length > 5 )
+			setButtonDisplay( 'block' )
+		else
+			setButtonDisplay( 'none' )
+	}, [ contact, contacts ] );
 
 	return (
 		<>
@@ -489,6 +502,7 @@ const ProjectEdit = ( params ) => {
 				<ModalAddContact />
 				<ModalEditContact />
 				<ModalSelectContact />
+				<ModalSelectContactsList />
 				<Breadcrumbs />
 				
 				<div className="container-fluid">
@@ -634,7 +648,7 @@ const ProjectEdit = ( params ) => {
 											>
 												Select an Existing Contacts
 												<span className="btn-icon-right">
-													<i className="fa fa-list"></i>
+													<i className="fa fa-circle"></i>
 													<i className="fa fa-user"></i>
 												</span>
 											</button>
@@ -643,7 +657,7 @@ const ProjectEdit = ( params ) => {
 												type			= "button" 
 												className		= "btn btn-ligth" 
 												data-toggle		= "modal" 
-												data-target		= "#contactSelectModal"
+												data-target		= "#contactsListSelectModal"
 												style			= {{ padding: '2px 18px' }}
 											>
 												Select a Contact List
@@ -656,6 +670,26 @@ const ProjectEdit = ( params ) => {
 											</span>
 											&nbsp;
 											<div><BuildContacts /></div>
+											&nbsp;
+											<Popconfirm
+												title		= 'RemoveALl'
+												description	= 'Do you really want to remove all contacts?'
+												onConfirm	= { handleClickDeleteAll }
+												okText		= 'Yes'
+												cancelText	= 'No'
+												
+											>
+												<button 
+														type			= "button" 
+														className		= "btn btn-danger" 
+														style			= {{ padding: '2px 18px', display: buttonDisplay }}
+												>
+														Remove all contacts
+														<span className="btn-icon-right">
+															<i className="fa fa-trash"></i>
+														</span>
+												</button>
+											</Popconfirm>
 										</div>
                                     </div>
 									<div className="row" style={{  marginTop: '10px' }}></div>

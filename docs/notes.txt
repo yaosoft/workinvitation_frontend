@@ -1,0 +1,4 @@
+verify duplicates when extracting contacts from file
+not allow sending a project to your self
+not allowing opeing a project from url that is not your
+when resending invitation, dont allow multiple hits on the sending button

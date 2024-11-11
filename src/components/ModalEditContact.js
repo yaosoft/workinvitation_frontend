@@ -60,7 +60,6 @@ const ModalEditContact = ( params ) => {
 	// Contact uid
 	const [ uid, setUid ] = useState( '' );
 
-
 	// Update Contact
 	const handleClickModifyContact = () => {
 		// check if contact already exist
@@ -91,7 +90,6 @@ const ModalEditContact = ( params ) => {
 			// name: name,
 			// email: email
 		// }
-alert( uid );
 
 		var toUpdate = '';
 		contacts.map( e => {
@@ -120,7 +118,7 @@ alert( uid );
 
 	}
 
-	// Delete cntact
+	// Delete contact
 	const handleClickDeleteContact = () => {
 		deleteAContact();
 		// setContact( {} );
@@ -134,16 +132,18 @@ alert( uid );
 		var toDelete = '';
 		contacts.map( e => {
 			if( e.id ){		// contact existing in the database
-				if( e.id == uid )
-					toDelete = e
+				if( e.id == uid ){
+					toDelete = e;
+					setContacts( contacts.filter( e => e.id != toDelete.id ) );
+				}
 			} 
 			if ( e.uid ){	// newly created contact
-				if( e.uid == uid )
-					toDelete = e
+				if( e.uid == uid ){
+					toDelete = e;
+					setContacts( contacts.filter( e => e.uid != toDelete.uid ) );
+				}
 			} 
 		})
-		
-		setContacts( contacts.filter( e => e.id != toDelete.id ) );
 	}
 
 	// Name validation
@@ -162,10 +162,6 @@ alert( uid );
 
 		return true;
 	}
-
-	// alert( contact.email );	
-	// window.document.getElementById( 'edit-recipient-name' ).value = contact.name;
-	// window.document.getElementById( 'edit-recipient-email' ).value = contact.email;
 
 	useEffect(() => {
 

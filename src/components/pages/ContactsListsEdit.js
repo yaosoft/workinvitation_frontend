@@ -58,6 +58,9 @@ const ContactsListsEdit = ( params ) => {
 
 	const [ buttonSpin, setButtonSpin ] = useState( 'none' );
 
+	//
+	const [ buttonDisplay, setButtonDisplay ] = useState( 'none' );
+
 	// const { setContactsListContact, contactsListContact } 	= useContext( SiteContext );
 	const { contact, setContact } = useContext( SiteContext );
 	// const { setContactsListContacts, contactsListContacts } = useContext( SiteContext );
@@ -136,9 +139,26 @@ const ContactsListsEdit = ( params ) => {
 		)
 	}
 
+	// Empty contacts list
+	const handleClickDeleteAll  = () => {
+		setContact( {} );
+		setContacts( [] )
+		setButtonDisplay( 'none' )
+	}
+
+	// Email validation
+	const regexEmailValidation = /^[a-zA-Z0-9. _-]+@[a-zA-Z0-9. -]+\.[a-zA-Z]{2,4}$/; 
+	const isValideEmail = ( email ) => {
+		if( !regexEmailValidation.test( email ) )
+			return 'Email is invalide';
+
+		return true;
+	}
+
 	// get the project if edit
 	useEffect( () => {
 		// contacts list
+		handleClickDeleteAll();
 		if( pageType == 'edit' ){
 		
 			const getContactsListData = async () => {
@@ -153,12 +173,23 @@ const ContactsListsEdit = ( params ) => {
 				const contacts = await getContactsListContacts( contactsListId );
 // console.log( 'contacts', contacts );
 				await setContacts( contacts );
+				
+				// if( contacts.length > 5 )
+					// setButtonDisplay( 'block' )
+				// else
+					// setButtonDisplay( 'none' )
 			}
 			getContactsListData();
 		}
 	}, [] );
 
-
+	// Display bulk contacts delete button
+	useEffect(() => {
+		if( contacts.length > 5 )
+			setButtonDisplay( 'block' )
+		else
+			setButtonDisplay( 'none' )
+	}, [ contact, contacts ] );
 
 	return (
 		<>
@@ -203,7 +234,8 @@ const ContactsListsEdit = ( params ) => {
 									<div>
 										<BuildContacts />
 									</div>
-									<div className="form-group">
+									<p>&nbsp;</p>
+									<div className="">
 										<button 
 												type			= "button" 
 												className		= "btn btn-ligth" 
@@ -217,15 +249,13 @@ const ContactsListsEdit = ( params ) => {
 													<i className="fa fa-user"></i>
 												</span>
 										</button>
-									</div>
-									
-									<div className="form-group">
-											<Upload
+										&nbsp;
+										<Upload
 												accept=".txt, .csv, .sql"
 												showUploadList={false}
 												beforeUpload={file => {
 													const reader = new FileReader();
-
+													var countError = 0;
 													reader.onload = e => {
 														const uploaded_text = e.target.result;
 														const emaillst = uploaded_text .match(/([a-zA-Z0-9._+-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi);
@@ -234,20 +264,52 @@ const ContactsListsEdit = ( params ) => {
 														}
 														else{
 															emaillst.map( ( v, k ) => {
+																
 																const rd = Math.floor(Math.random() * 1000000000);
 																const newContact = {
 																	name: '',
 																	email: v,
 																	uid: 'create_' + rd,
 																}
-
-																setContact( newContact );
-																const conts = contacts;
-																conts.push( newContact );
-																setContacts( conts );
 																
-																message.success( emaillst.length + ' contacts willl be added' );
+																var error = false;
+																
+																// Email validation
+																const emailValidation = isValideEmail( newContact.email );
+																if( emailValidation !== true ){
+																	message.error( 'Email ' + newContact.email + ' incorrect' );
+																	error = true;
+																	countError++;
+																}
+																else {
+																	// duplicate verification
+																	const check = contacts.filter( e => e.name == newContact.name && e.email == newContact.email );
+																	console.log( 'check', check );
+																	if( check.length ){
+																		message.error( 'This contact already exists!' );
+																		error = true;
+																		countError++;
+																	}
+																}
+
+																if( error == false ){
+																	setContact( newContact );
+																	const conts = contacts;
+																	conts.push( newContact );
+																	setContacts( conts );
+																	
+																	// if( contacts.length > 5 )
+																		// setButtonDisplay( 'block' )
+																	// else
+																		// setButtonDisplay( 'none' )
+																	
+																	
+																}
 															})
+															
+														}
+														if( countError < emaillst.length ){
+															message.success( ( emaillst.length - countError )  + ' contacts willl be added' );
 														}
 														console.log( emaillst );
 													};
@@ -260,9 +322,29 @@ const ContactsListsEdit = ( params ) => {
 												<Button>
 													<i className="fa fa-upload"/>&nbsp; Extract contacts from a file
 												</Button>
-											</Upload>
+										</Upload>
+										&nbsp;
+										<Popconfirm
+											title		= 'RemoveALl'
+											description	= 'Do you really want to remove all contacts?'
+											onConfirm	= { handleClickDeleteAll }
+											okText		= 'Yes'
+											cancelText	= 'No'
+											
+										>
+											<button 
+													type			= "button" 
+													className		= "btn btn-danger" 
+													style			= {{ padding: '2px 18px', display: buttonDisplay }}
+											>
+													Remove all contacts
+													<span className="btn-icon-right">
+														<i className="fa fa-trash"></i>
+													</span>
+											</button>
+										</Popconfirm>
 									</div>
-									
+									<p>&nbsp;</p>
 									<button 
 										className	= "btn login-form__btn submit w-100"
 										onClick		= { e => handleClickBtn( e ) }
@@ -282,7 +364,7 @@ const ContactsListsEdit = ( params ) => {
 														}
 													/>
 												</Space>
-												Create
+												Save
 									</button>
                             </div>
                         </div>

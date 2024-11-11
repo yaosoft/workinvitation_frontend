@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, Link, useLocation  } from 'react-router-dom';
 import { SiteContext } from "../context/site";
+import { AuthContext } from '../context/AuthProvider';
+
 import '../modalOverrides.css';
+
 
 import { Space, Spin, Button, notification, message, Popconfirm } from 'antd';
 import {
@@ -12,7 +15,7 @@ import {
 	LoadingOutlined
 } from '@ant-design/icons';
 
-const ModalSelectContact = ( params ) => {
+const ModalSelectContactsList = ( params ) => {
 
 	var newContact = {};
 	
@@ -25,29 +28,19 @@ const ModalSelectContact = ( params ) => {
 		});
 	};
 
-	// Contact email
-	// const [ email, setEmail ] = useState( '' );
-	// const handleChangeEmail = ( e ) => {	
-		// setEmail( e.target.value );
-	// }
-
-	// // Contact nom
-	// const [ name, setName ] = useState( '' );
-	// const handleChangeName = ( e ) => {	
-		// setName( e.target.value );
-	// }
+	const { getUser }	= useContext( AuthContext );
 
 	// 
-	const { setContact, contact } 	= useContext( SiteContext );
-	const { setContacts, contacts } = useContext( SiteContext );
-	const { getContacts } 			= useContext( SiteContext );
+	const { setContact, contact } 				= useContext( SiteContext );
+	const { setContacts, contacts } 			= useContext( SiteContext );
+	const { getContacts, getContactsLists, getContactsListContacts } 	= useContext( SiteContext );
 
-	const [ existingContacts, setExistingContacts ] =  useState( [] );
+	const [ existingContactsList, setExistingContactsList ] =  useState( [] );
 
 	const [ checks, setChecks ] = useState( [] );
 
-console.log( 'existingContacts', existingContacts );
-console.log( 'length', existingContacts.length );
+console.log( 'existingContacts', existingContactsList );
+console.log( 'length', existingContactsList.length );
 console.log( 'checks', checks );
 
 	const [ subscribeCheckbox, setSubscribeCheckbox ] = useState( '' );
@@ -57,9 +50,9 @@ console.log( 'checks', checks );
 		setChecks( arr );
 	}
 
-	const BuildExistingContacts = () => {
+	const BuildExistingContactsLists = () => {
 		return (
-			existingContacts.map( ( contact, key ) => 
+			existingContactsList.map( ( contactsList, key ) => 
 				<p>
 					<input 
 						onChange	= { e => changeSubscribeCheckbox( key ) }
@@ -68,27 +61,30 @@ console.log( 'checks', checks );
 						index		= { key }
 					/>
 					&nbsp;&nbsp;
-					<span>{ contact.name }</span>
-					&nbsp;&nbsp;
-					<span>{ contact.email }</span>
+					<span>{ contactsList.title }</span>
 				</p>
 			)
 		)
 	}
 	
 	// Add Contact
-	const handleClickContact = () => {
+	const handleClickContact =  () => {
 
 		if( ! checks.filter( v => v === true ).length ){
-			message.error( 'No contact selected' );
+			message.error( 'No contacts list selected' );
 		}
 		else{
-			checks.map( ( v, k ) => {
-				if( v )
-					addAContact( existingContacts[ k ] )
+			checks.map( async ( v, k ) => {
+				if( v ){
+					const contacts = await getContactsListContacts( existingContactsList[ k ].id );
+					
+					contacts.map( ( contact, index ) => {
+						addAContact( contact );
+					})
+				}
 			})
 		}
-		window.document.getElementById( 'closeModal' ).click(); // Todo: react way
+		window.document.getElementsByClassName( 'close' )[0].click(); // Todo: react way
 	}
 	
 	const addAContact = ( contact ) => {
@@ -107,13 +103,13 @@ console.log( 'checks', checks );
 			message.error( emailValidation );
 			return;
 		}
-		
+
 		// duplicate verification
 		const check = contacts.filter( e => e.name == name && e.email == email );
 
 		if( check.length ){
 			message.error( 'This contact already exists!' );
-			window.document.getElementById( 'closeModal' ).click(); // Todo: react way
+			// window.document.getElementsByClassName( 'closeModal' ).click(); // Todo: react way
 			return;
 		}
 			
@@ -151,30 +147,31 @@ console.log( 'checks', checks );
 	}
 
 	// get existing contacts
+	const user_id = getUser().userId;
 	useEffect( () => {
-		const getExistingContact = async () => {
-			const contactList = await getContacts();
-			setExistingContacts ( contactList );
-			setChecks ( new Array( contactList.length ).fill( true ) );
+		const getExistingContactsLists 	= async () => {
+			const contactsLists			= await getContactsLists( user_id );
+			setExistingContactsList ( contactsLists );
+			setChecks ( new Array( contactsLists.length ).fill( false ) );
 		}
-		getExistingContact();
+		getExistingContactsLists();
 	}, [] );
 
 	return (
 		<>
 			<div class="bootstrap-modal">
-				<div class="modal fade" style={{ zIndex: 5 }} id="contactSelectModal" tabindex="-1" role="dialog" aria-labelledby="contactSelectModalLabel" aria-hidden="true">
+				<div class="modal fade" style={{ zIndex: 5 }} id="contactsListSelectModal" tabindex="-1" role="dialog" aria-labelledby="contactSelectModalLabel" aria-hidden="true">
 					<div class="modal-dialog" role="document">
 						<div class="modal-content">
 							<div class="modal-header">
-								<h5 class="modal-title" id="contactSelectModalLabel">Select an existing Contact</h5>
+								<h5 class="modal-title" id="contactSelectModalLabel">Select a Contact List</h5>
 								<button id="closeModal" type="button" class="close" data-dismiss="modal" aria-label="Close">
 									<span aria-hidden="true">&times;</span>
 								</button>
 							</div>
 							<div class="modal-body">
 
-								<BuildExistingContacts />
+								<BuildExistingContactsLists />
 
 							</div>
 							<div class="modal-footer">
@@ -195,4 +192,4 @@ console.log( 'checks', checks );
 	);
 };
 
-export default ModalSelectContact;
+export default ModalSelectContactsList;
