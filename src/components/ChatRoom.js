@@ -13,16 +13,20 @@ import '../chatStyles.css';
 import ModalChatBox from './ModalChatBox';
 
 import '../modalOverrides.css';
+import '../chatStylesOverrides.css';
 
 const ChatRoom = ( params ) => {
-console.log( 'ChatRoomParams', params );	
-	
+// console.log( 'ChatRoomParams', params );	
 	const [ msgerChat, setMsgerChat ] = useState( document.createElement("div") );
 	
 	const { getUser }	= useContext( AuthContext );
 
-	// save chat message
-	const { saveMessage, getMessages } = useContext( ChatContext );
+	// project chat message
+	const { projectMessages } = useContext( ChatContext );
+	
+	var { 
+		currentIntervalId
+	} = useContext( ChatContext );
 
 	// product id
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -36,7 +40,7 @@ console.log( 'ChatRoomParams', params );
 	const [ isOwner, setIsOwner ] = useState( params.params ? params.params.isOwner : '' );
 
 	// chat messages
-	const [ chatMessages, setChatMessages ] 			= useState( [] );
+	const [ chatMessages, setChatMessages ] 			= useState( projectMessages );
 	const [ messageReceiverId, setMessageReceiverId ] 	= useState( '' );
 	const [ messageUserId, setMessageUserId ] 			= useState( '' );
 
@@ -52,7 +56,7 @@ console.log( 'ChatRoomParams', params );
 	}
 
 	// build dialog
-	const BuildChatDialog = () => {
+	const BuildChatRoomDialog = () => {
 // console.log( '>><<<>>><<< chatMessages', chatMessages );
 		var count			= 0;
 		var count_unread 	= 0;
@@ -102,13 +106,10 @@ console.log( 'ChatRoomParams', params );
 		}
 	}
 
-
 	// chat Message Owner
 	const [ chatMessageOwnerId, setChatMessageOwnerId ] 		= useState( '' );
 	const [ chatMessageReceiverId, setChatMessageReceiverId ] 	= useState( '' );
 
-	// Load chat messages
-	
 	// Append text message that reply to image or text message
 	const imgExt = [];
 	const getFileScr = (a) => {
@@ -432,9 +433,9 @@ console.log( 'ChatRoomParams', params );
 	const [ openModalChatBox, setOpenModalChatBox ] = useState(false);
 	const onOpenModalChatBox  	= () => setOpenModalChatBox(true);
 	const onCloseModalChatBox 	= async () => {
+		clearInterval( currentIntervalId );
 		setOpenModalChatBox(false)
 	};
-	//
 
 	useEffect( () => {
 		const elt = document.getElementsByClassName( 'msger-chat' )[ 0 ];
@@ -452,42 +453,16 @@ console.log( 'ChatRoomParams', params );
 			setChatMessageOwnerId( projectObj.ownerId );
 			setChatMessageReceiverId( userId );
 		}
+		
+		
 	}, [projectId] );
 	
 	
-	// create contact list
 	useEffect( () => {
-// chat get messages
-		const getAllMessages = async () => {
-			const rep = await getMessages( userId, projectId );
-			
-			
-
-			if( rep != '0' && lastLoaded != rep ){	// Todo: '0' must be an int
-console.log( 'Has new message' );
-// console.log( rep );
-				setChatMessages( rep );
-
-				// msgerChat.innerHTML = '';
-				// var messages = JSON.stringify( rep );
-				// var messages = JSON.parse( rep );
-				// var messages = rep;
-				
-				// loadMessages( messages );
-				// lastLoaded = rep;
-
-				haveNew = true;
-
-				if( modalOpened )
-					setMessagesRead( project_id );
-			}
-			else{
-				haveNew = false;
-	console.log( 'No new message' );
-			}
-		}
-		getAllMessages();
-	}, [ msgerChat ] );
+	// set chatroom messages
+		setChatMessages( projectMessages );
+	}, [ projectMessages ] );
+	
 	
 	return (
 	<>
@@ -498,6 +473,7 @@ console.log( 'Has new message' );
 						isOwner: params.params.isOwner,
 						messageReceiverId : messageReceiverId,
 						messageUserId : messageUserId,
+						chatMessages: chatMessages
 					}}
 				/>
 			</Modal>
@@ -538,11 +514,11 @@ console.log( 'Has new message' );
 			</div>
 
 			<div className="msg-text">
-			  Hi Foo UserName, welcome to your project's Chat room! Go ahead and send a message to our team.
+			  Hi Foo UserName, welcome to your project's Chat room! Go ahead and open a dialog.
 			</div>
 		  </div>
 		</div>
-		<BuildChatDialog />
+		<BuildChatRoomDialog />
 	  </div>
 	  
 	  <div id='chatMsgMenu' style={{ height: '70px', padding: '5px', borderTop: '0.5px solid silver', display: 'none' }}>

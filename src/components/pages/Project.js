@@ -55,6 +55,12 @@ const Project = ( params ) => {
 		setOpenProjectModalView( true )
 	}
 
+	// get chat message
+	const { getMessages } = useContext( ChatContext );
+	
+	// chat messages
+	// const [ chatMessages, setChatMessages ] = useState( [] );
+
 	// Modal
 	const [ openProjectModalView, setOpenProjectModalView ] = useState(false);
 	const onOpenProjectModalView  		= () => setOpenProjectModalView(true);
@@ -120,7 +126,7 @@ const Project = ( params ) => {
 	// projectId
 	useEffect( () => {
 		const getIdFromUrl = async () => {
-			const id = await searchParams.get( 'projectId' );
+			const id = await searchParams.get( 'projectId' );		
 			setProjectId( id );
 		}
 		getIdFromUrl();
@@ -134,7 +140,17 @@ const Project = ( params ) => {
 		getProjectData( projectId );
 	}, [ projectId ] );
 
-
+	// chat get messages
+	useEffect( () => {
+		if( !userId )
+			return
+		
+		const getAllMessages = async () => {
+			const rep = await getMessages( userId, projectId ); // this use a context to persist messages
+		}
+		getAllMessages();
+	}, [ userId ] );
+	
 	const getProjectData = async ( projectId ) => {
 
 		const user_id = await getUser().userId;
@@ -249,20 +265,22 @@ const Project = ( params ) => {
                     </div>
                 </div>
 				{ 
-					isProjectOwner === true ?
-						<ChatRoom 
-							params={{
-								project: project,
-								isOwner: isProjectOwner,
-							}} 
-						/>
+					isProjectOwner !== true ?
+						isProjectOwner === false &&
+							<ChatBox
+								params={{
+									project: project,
+									isOwner: isProjectOwner,
+								}} 
+							/>
 					:
-						<ChatBox
-							params={{
-								project: project,
-								isOwner: isProjectOwner,
-							}} 
-						/>
+					<ChatRoom 
+						params={{
+							project: project,
+							isOwner: isProjectOwner,
+						}} 
+					/>
+							
 				}
                 <div className="row">
                     <div className="col-lg-12">

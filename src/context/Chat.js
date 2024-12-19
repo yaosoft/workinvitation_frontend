@@ -20,8 +20,10 @@ export const ChatProvider = ({ children }) => {
 	const [ spiner, setSpiner ] = useState( 'none' );
 
 	// helper: Fetch data definition
-	async function fetchData( url, data, method ) {
-		setSpiner( 'block' )
+	async function fetchData( url, data, method, spiner ) {
+		if( spiner )
+			setSpiner( 'block' )
+
 		const response = await fetch( url, {
 			method: method, // *GET, POST, PUT, DELETE, etc.
 			// mode: "no-cors", // no-cors, *cors, same-origin
@@ -51,8 +53,8 @@ export const ChatProvider = ({ children }) => {
 	const saveMessage = async ( data ) => {
 		const url 		= base_api_url +  'chat/save/message';
 		const method 	= 'POST';
-console.log( 'saveMessage', data ); 
-		const resp 		= await fetchData( url, data, method );
+		const spiner	= false;		
+		const resp 		= await fetchData( url, data, method, spiner );
 
 		return resp.id;
 	}
@@ -89,10 +91,17 @@ console.log( 'saveMessage', data );
 		const url		= base_api_url + 'chat/getMessages?userId=' + userId + '&projectId=' + projectId;
 		const data 		= {};
 		const method	= 'GET';
+		const spiner	= false;
 
-		const messages = await fetchData( url, data, method );
+		const messages = await fetchData( url, data, method, spiner );
+		
+		setProjectMessages( messages ); // a static copy of the messages
+		
 		return messages;
 	}
+	
+	//
+	const [ projectMessages, setProjectMessages ] = useState( [] );
 
 	// delete a chat message
 	const deleteChatMessage = async ( messageId ) => {
@@ -100,8 +109,10 @@ console.log( 'saveMessage', data );
 		const url		= base_api_url + 'chat/deleteChatMessage?messageId=' + messageId;
 		const data 		= {};
 		const method	= 'GET';
-
-		const messages = await fetchData( url, data, method );
+		
+		const spiner	= true;
+		
+		const messages = await fetchData( url, data, method, spiner );
 		return messages;
 	}
 
@@ -111,9 +122,25 @@ console.log( 'saveMessage', data );
 		const url		= base_api_url + 'chat/deleteChatFile?messageId=' + messageId;
 		const data 		= {};
 		const method	= 'GET';
+		const spiner	= true;
 
-		const messages = await fetchData( url, data, method );
+		const messages = await fetchData( url, data, spiner );
 		return messages;
+	}
+
+	// update read
+	const updateMessagesRead = async ( userId, projectId, messagesId ) => {
+		const url		= base_api_url + 'chat/update/messagesRead';
+		const data 		= {
+			userId: 	userId,
+			projectId: 	projectId,
+			messagesId: messagesId
+		};
+		const method	= 'POST';
+		const spiner	= false;
+		const resp 		= await fetchData( url, data, method, spiner ); // spiner === false
+
+		return resp;
 	}
 
 	return (	
@@ -123,8 +150,10 @@ console.log( 'saveMessage', data );
 				saveMessage,
 				saveFile,
 				getMessages,
+				projectMessages,
 				deleteChatMessage,
-				deleteChatFile
+				deleteChatFile,
+				updateMessagesRead,
 			}}
 		>
 		

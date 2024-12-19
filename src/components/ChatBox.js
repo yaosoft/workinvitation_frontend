@@ -25,14 +25,25 @@ import {
 } from '@ant-design/icons';
 
 const ChatBox = ( params ) => {
-// console.log( '---- params', params );	
+
+	const [ indice, setIndice ] = useState( 0 );
 	const [ msgerChat, setMsgerChat ] = useState( document.createElement("div") );
 	
 	const { siteURL }	= useContext( SiteContext );
 	const { getUser }	= useContext( AuthContext );
+	const { 
+		saveMessage, 
+		saveFile, 
+		getMessages, 
+		projectMessages, 
+		deleteChatMessage, 
+		deleteChatFile, 
+		updateMessagesRead,
+	} = useContext( ChatContext );
 
-	// save chat message
-	const { saveMessage, saveFile, getMessages, deleteChatMessage, deleteChatFile } = useContext( ChatContext );
+	var { 
+		currentIntervalId
+	} = useContext( ChatContext );
 
 	// product id
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -79,7 +90,12 @@ const ChatBox = ( params ) => {
 	//replied image path
 	const [ repliedImagePath, setRepliedImagePath ] = useState( 'none' );
 	
-
+	// unread messages
+	const [ unreads, setUnreads ] = useState( [] );
+	
+	// message is read
+	const [ isRead, setIsRead ] = useState( [] );
+	
 	// reply to a chat's message
 	const handleClickReply = ( msg, msgid, type, displayName, path ) => {
 		clearEntries();
@@ -99,7 +115,7 @@ const ChatBox = ( params ) => {
 		
 	}
 
-	// scroll to the replied message
+	// scroll up to the replied message
 	const handleClickReplyed = ( messageId ) => {
 		const elt = window.document.getElementById( messageId );
 console.log( messageId );
@@ -151,28 +167,6 @@ console.log( messageId );
 
 	// message position in chat
 	const [ messagesPositions, setMessagesPositions ] = useState( [] );
-
-	// Handle scroll
-	// var positionArray = [];
-    // const handleScroll = (e) => {
-		// const chatContainer = window.document.getElementById( 'msgerchat' );
-		// positionArray = [];
-		// const positions = chatMessages.map( ( message ) => {
-			// const elt 		= window.document.getElementById( message.messageId );
-			// const eltTop 	= elt.offsetTop;
-			// const containerTop = chatContainer.offsetTop;
-			
-			// const eltRelativeTop = eltTop - containerTop;
-			// const obj = { 
-				// messageId: message.messageId,
-				// topPosition: eltRelativeTop
-			// }
-			// positionArray.push( obj );
-		// })
-// console.log( 'positionArray', positionArray );
-        // // setMessagesPositions( positionArray );
-    // };
-
 
 	// imageExtentions
 	const imageExtentions = [ 'jpg', 'gif', 'png', 'jpeg' ];
@@ -235,6 +229,9 @@ console.log( messageId );
 		else return 'filesIcon.png';
 	}
 
+	// avoid a scroll to occure avary chat reload
+	const [ currentScrollTop, setCurrentScrollTop ] = useState( 0 );
+
 	// delete a chat text message
 	const handleClickDeleteChatMessage = async ( messageId ) => {
 		const rep = await deleteChatMessage( messageId );
@@ -247,12 +244,13 @@ console.log( messageId );
 
 	// build dialog
 	const BuildChatDialog = () => {
+// console.log( 'chatMessages.map: ' + chatMessages );
 		var count			= 0;
 		var count_unread 	= 0;
 		const userid = getUser.userId;
 		return (
 			chatMessages.map( ( message ) => 
-					<div className= { 'msg ' + message.side + '-msg' } {...{ "id": message.messageId }} >
+				<div className= { 'msg ' + message.side + '-msg' } {...{ "id": message.type + "_" + message.messageId }} >
 					<div
 						className="msg-img" style={{ backgroundImage: 'url(https://image.flaticon.com/icons/svg/327/327779.svg' }} >
 					</div>
@@ -270,7 +268,7 @@ console.log( messageId );
 										<div className={ 'msg-info' } >
 										  <div className={ 'msg-info-name' }> { message.repliedMessage.userId == userId ? 'You' : message.repliedMessage.name }</div>
 										</div>
-										<div>{ message.repliedMessage.replied_message }</div>
+										<div style={{ whiteSpace: 'pre-wrap'}}>{ message.repliedMessage.replied_message }</div>
 									</div>
 								}
 								<div className={ 'msg-info' } >
@@ -280,13 +278,32 @@ console.log( messageId );
 									}
 									<div className={ 'msg-info-time' }> { message.displayDate }</div>
 								</div>
-								<div>{ message.message }</div>
-								<a 
-									title	= 'reply' style={{ color: 'blue', cursor: 'pointer' }} 
-									onClick	= { e => handleClickReply( message.message, message.messageId, message.type, message.messageUserName, message.path) } 
-								>
-									&nbsp; reply
-								</a>
+								<div style={{ whiteSpace: 'pre-wrap'}}>{ message.message }</div>
+								
+								{ 
+									message.isReceiver === false &&
+									<>
+									{
+										message.viewed ?
+											<a title='read'>
+												<i className='fa fa-eye-slash text-success' >&nbsp;</i>
+											</a>
+										:
+											<a title='not read'>
+												<i className='fa fa-eye-slash' style={{ color: '#C8C8C8' }} >&nbsp;</i>
+											</a>
+									}
+									</>
+								}
+								{
+									message.messageUserId != userId && 
+									<a 
+										title	= 'reply' style={{ color: 'blue', cursor: 'pointer' }} 
+										onClick	= { e => handleClickReply( message.message, message.messageId, message.type, message.messageUserName, message.path) } 
+									>
+										reply
+									</a>
+								}
 								{ 
 									message.canbedeleted == '1' && message.messageUserId == userId && 
 										<Popconfirm
@@ -375,12 +392,30 @@ console.log( messageId );
 											<div className='row'>
 												<br/> { message.size.toFixed(2) } mo
 												<br/><br/>
-												<a 
-													title	= 'reply' style={{ color: 'blue', cursor: 'pointer' }} 
-													onClick	= { e => handleClickReply( message.message, message.messageId, message.type, message.messageUserName, message.path) } 
-												>
-													&nbsp; reply
-												</a>
+												{ 
+													message.isReceiver === false &&
+													<>
+														{
+															message.viewed ?
+																<a title='read'>
+																	<i className='fa fa-check text-success' >&nbsp;</i>
+																</a>
+															:
+																<a title='not read'>
+																	<i className='fa fa-eye-slash' style={{ color: '#C8C8C8' }} >&nbsp;</i>
+																</a>
+														}
+													</>
+												}
+												{
+													message.messageUserId != userId && 
+													<a 
+														title	= 'reply' style={{ color: 'blue', cursor: 'pointer' }} 
+														onClick	= { e => handleClickReply( message.message, message.messageId, message.type, message.messageUserName, message.path) } 
+													>
+														reply
+													</a>
+												}
 												{ 
 													message.canbedeleted == '1' && message.messageUserId == userId && 
 														<Popconfirm
@@ -470,17 +505,18 @@ console.log( messageId );
 	const [ chatMessageOwnerId, setChatMessageOwnerId ] 		= useState( '' );
 	const [ chatMessageReceiverId, setChatMessageReceiverId ] 	= useState( '' );
 
-	// Load chat messages
+	// chatbox's relative diff 
+	const [ relatifDiff, setRelatifDiff ] = useState( 0 );
+	
 	
 	
 
 	// Icons made by Freepik from www.flaticon.com
-	var haveNew			= true;
+
 	var chatIsOpen		= false; // the chat is loaded but the user hevent click on chat modal yet
 	
 // console.log( 'msgerChat:' + msgerChat );
 	var lastLoaded		= '';
-	var haveNew			= true;
 	const http 			= window.location.protocol;
 	const URL  			= window.location.href;
 	const domain 		= 'diamta.com';
@@ -491,7 +527,7 @@ console.log( messageId );
 		const xhttp = new XMLHttpRequest();
 		xhttp.onload = function() {
 			var result = this.responseText;
-	console.log( 'setMessagesRead:' + result );
+// console.log( 'setMessagesRead:' + result );
 		}
 		const server = serverbase + "/setMessagesRead/" + project_id;
 		xhttp.open( "POST", server );
@@ -514,175 +550,235 @@ console.log( messageId );
 			setChatMessageReceiverId( project.ownerId );
 		}
 		else{
-console.log( '>>>>>>> params', params );
+// console.log( '>>>>>>> params', params );
 
 			setChatMessageReceiverId( params.params.messageReceiverId ); // To do
 		}
 	}, [ params.params ] );
 	
 
-	
-	
 	// create contact list
 	useEffect( () => {
-		// clear
 		clearEntries();
-// chat get messages
-		const getAllMessages = async () => {
-			const messages = await getMessages( userId, projectId );
-			
-			
-
-			if( messages != '0' && lastLoaded != messages ){	// Todo: '0' must be an int
-console.log( 'Has new message' );
-// console.log( rep );
-console.log( 'params.params', params );
-				if( params.params.messageReceiverId && params.params.messageUserId ){
-					const chatBoxMessages = messages.filter( ( message => 
-						( message.messageReceiverId == userId && 
-						message.messageUserId == params.params.messageReceiverId ) ||
-						( message.messageReceiverId == params.params.messageReceiverId && 
-						message.messageUserId == userId )
-					) );
-					setChatMessages( chatBoxMessages );
-					
-					// scroll to the bottom
-					const messagesEnd = window.document.getElementById( "messagesEnd" );
-					messagesEnd.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
-				}
-				else{
-					setChatMessages( messages );
-				}
-				
-					
-
-				haveNew = true;
-
-				// if( modalOpened )
-				//	setMessagesRead( project_id );
-			}
-			else{
-				haveNew = false;
-	console.log( 'No new message' );
-			}
-		}
-		getAllMessages();
-	}, [ msgerChat ] );
-	
-
-	// messages position in the chat
-	useEffect( () => {
-		// scroll to bottom
-		// const objDiv =  window.document.getElementById( "msgerchatbox" );
-		// const length = objDiv.scrollHeight;
-// console.log( 'msgerchatbox length', length );
-		// objDiv.scroll({ length, behavior: 'smooth' });
-// console.log( 'msgerchatbox length', length );
-		
+		const ind = 0; // Todo: was unable to use setIndice( 1 );
+		currentIntervalId = setInterval( loadMessages, 25000, ind );
 	}, [] );
+
+	// reload messages and manage read ( seen ) messages
 	
+	const loadMessages = async ( ind ) => {
+// console.log( 'Reload ...' );
+// console.log( 'CurrentScrollTop ', currentScrollTop );		
+
+		const messages = await getMessages( userId, projectId );
+		
+		if( !messages ){
+console.log( 'getMessages fails' );
+			return;
+		}
+
+		const chatBox 		= await window.document.getElementById( "msgerChatbox" );
+		if( !chatBox ){
+console.log( 'No chatBox' );
+			return;
+		}
+
+		// Note: params.params.messageReceiverId is the project receiver id
+		// if current user is the project owner (in a modal): The project owner receive message from numtiple project worker, then we must get only his message with the selected dialog worker
+		if( params.params.isOwner ){ // current is the project owner
+			const chatBoxMessages = await messages.filter( ( message => 
+				( message.messageReceiverId == userId && 
+				message.messageUserId == params.params.messageReceiverId ) ||
+				( message.messageReceiverId == params.params.messageReceiverId && 
+				message.messageUserId == userId )
+			));
+
+			await setChatMessages( chatBoxMessages );
+			await setViewed( messages );
+
+		} // if current user is a project worker: the project worker receive messages only from the project owner 
+		else{				// current user is the receiver
+			await setChatMessages( messages ); // Todo: display only the last message from all the project receivers
+			await setViewed( messages );
+		}
+
+// console.log( 'ind', ind );
+		ind = 1;
+	}
+
+	// set new viewed messages
+	const setViewed = async ( messages ) => {
+		var newReadMessageIds = '';
+		// chatbox position
+		const chatBox 		= await window.document.getElementById( "msgerChatbox" );
+		if( !chatBox ){
+console.log( 'Chatbox is not ready!' );
+			return;
+		}
+		const chatBoxTop 	= chatBox.offsetTop;
+		const chatBoxBottom = chatBoxTop + chatBox.offsetHeight;
+		
+		// check if message is viewed
+		const scrollTop	= chatBox.scrollTop;
+		// await messages.map( async( message ) => {
+		for( const message of messages ){
+			if( message.messageUserId === userId || message.viewed === true ){
+				continue;
+			}
+			// message element
+			const messageElt = await window.document.getElementById( message.type + '_' + message.messageId );
+			if( messageElt === null ){
+// console.log( 'Message Id ' + message.type + '_' + message.messageId + ' is not found' )
+				return;
+			}
+	
+			
+			// message element position
+			const messageEltTop 	= messageElt.offsetTop - scrollTop;
+			const messageEltBottom 	= messageEltTop + messageElt.offsetHeight;
+
+// if( message.messageId == 63 ){
+	// console.log( '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>' );
+	// console.log( 'scrollTop', scrollTop );
+	// console.log( 'messageElt', messageElt );
+	// console.log( 'messageElt.offsetTop', messageElt.offsetTop );
+	// console.log( 'chatBoxTop: ' + chatBox.offsetTop + ' chatBoxBottom: ' + ( + chatBox.offsetTop + chatBox.offsetHeight ) );
+	// console.log( 'messageEltTop: ' + messageEltTop + ' messageEltBottom: ' + messageEltBottom  );
+	// if ( messageEltTop > 0 && ( ( messageEltTop >= chatBoxTop || messageEltBottom <= chatBoxBottom ) || 
+								// ( messageEltTop <= chatBoxTop && messageEltBottom >= chatBoxBottom ) // a message larger than the display window
+	// ) ) {
+// console.log( 'message read!' );
+	// }
+	// else{
+// console.log( 'message NOT read' );	
+	// }
+
+// }	
+
+
+// console.log( 'chatBoxTop: ' + chatBox.offsetTop + ' chatBoxBottom: ' + ( + chatBox.offsetTop + chatBox.offsetHeight ) );
+// console.log( 'messageEltTop: ' + messageEltTop + ' messageEltBottom: ' + messageEltBottom  );
+	 if ( ( messageEltTop >= chatBoxTop && messageEltBottom <= chatBoxBottom ) ||
+		( messageEltTop <= chatBoxTop && messageEltBottom >= chatBoxBottom ) 
+	) {
+ // console.log( 'message read!' );
+	 }
+	 else{
+// console.log( 'message NOT read' );	
+	 }
+
+// console.log( '>>>>> is message ' + message.messageId + ', type ' + message.type + ' already viewed: ', message.viewed );
+
+			
+				if ( ( messageEltTop >= chatBoxTop && messageEltBottom <= chatBoxBottom ) ||
+					( messageEltTop <= chatBoxTop && messageEltBottom >= chatBoxBottom )
+				){
+					const text = message.type + '*' + message.messageId;
+					newReadMessageIds = newReadMessageIds + text + '-';
+				}
+			
+		}
+		// setIsRead( reads );
+		
+// console.log( 'newReadMessageIds', newReadMessageIds );
+		
+		if( newReadMessageIds ){
+			await updateMessagesRead( userId, projectId, newReadMessageIds.slice( 0, -1 ) );
+			// alert( reads.length );
+		}
+	}
+
 	return (
 		<>
 			<div className="row">
-						<div className="col-lg-12">
-							<div className="row">
-								<div className="col-12">
-									<div className="card">
-										<div className="card-body pb-0 d-flex justify-content-between">
-											<div style={{ width: '100%' }}>
-												<h4 className="mb-1">Communication and files</h4>
-												
-												
-												
-		  <main className="cd__main">
-			
-			 <section className="msger">
-	  <header className="msger-header">
-		<div className="msger-header-title">
-		  <i className="fas fa-comment-alt"></i>Project's messages ( <span id='countMessages'></span> )
-		</div>
-		<div className="msger-header-options close">
-		  <span><i className="fas fa-cog"></i></span>
-		</div>
-	  </header>
-
-	  <div className="msger-chat" id="msgerchatbox">
-		
-		<div className="msg right-msg">
-		  <div
-		   className="msg-img" style={{ backgroundImage: 'url(https://image.flaticon.com/icons/svg/327/327779.svg' }} ></div>
-
-		  <div className="msg-bubble">
-			<div className="msg-info">
-			  <div className="msg-info-name">Diamta</div>
-			  <div className="msg-info-time"><span id='curentTime'>12:45</span></div>
-			</div>
-
-			<div className="msg-text">
-			  Chat with the project's owner.
-			</div>
-		  </div>
-		</div>
-		<BuildChatDialog />
-		<div id = 'messagesEnd' style={{ float: "left", clear: "both" }} >
-        </div>
-	  </div>
-	  
-	  <div id='chatMsgMenu' style={{ height: '70px', padding: '5px', borderTop: '0.5px solid silver', display: displayChatMenu }}>
-		<p id='chatMsgUserId'>{ replyUserName }</p> 
-		
-			<div className='crop' id='chatMsgResponse' style={{ width: '95%', border: 'none', display: 'inline-block', float: 'left' }}>
-				 <img src={ repliedImagePath } style={{ display: repliedImageDisplay }} /> { replyContent }
-			</div>
-			<a title='close' onClick={ handleClickCloseChatMenu } style={{ cursor: 'pointer' }}>X</a>
-		
-	  </div>  
-	  <div title='close' id='chatFilesPreviewContainer' style={{ height: '50px', width: '100%', display: 'inline-block', display: 'none' }}>
-	  <div id='chatFilesPreview' style={{ padding: '5px', borderTop: '0.5px solid silver', width: '98%', float: 'left' }}>
-	  </div><div id='chatFilesPreviewFinishBtnDiv' style={{ width: '2%', float: 'left' }}><a title='close' id='chatFilesPreviewFinishBtn' style={{ cursor: 'pointer' }}>X</a></div></div>
-		<div style={{ marginTop: '1%', marginLeft: '1%' }}>
-			<div style={{ width: '98%', marginLeft: '1%' }} className='row'>
-				<textarea  
-					className	= "msger-input" 
-					style		= {{ whiteSpace: 'pre-wrap' }} 
-					placeholder	= "Enter your message..."
-					onChange 	= { e => handleChangeChatMessage( e ) }
-					value		= { chatMessage }
-				>
-				</textarea>
-				<button 
-					className 	= "msger-send-btn" 
-					id			= "sendBtn"
-					onClick		= { e => handleClickSendChatMessage( e ) }
-				>
-					Send
-				</button>
-			</div>
-			<div  className='row'  style={{ marginTop: '1%', marginLeft: '1%' }}>
-				<Dragger {...props}>
-					<p className="ant-upload-drag-icon">
-						Click or drag here to upload files
-					</p>
-				</Dragger>
-			</div>
-		</div>
-	</section>
-		   
-		  </main>	
-												
-												<br />
-												
-			
-												
-											</div>
-										</div>
+				<div className="col-lg-12">
+					<div className="row">
+						<div className="col-12">
+							<div className="card">
+								<div className="card-body pb-0 d-flex justify-content-between">
+									<div style={{ width: '100%' }}>
+										<h4 className="mb-1">Communication and files</h4>
+										<main className="cd__main">
+											<section className="msger">
+												<div className="msger-chat" id="msgerChatbox">
+													<div className="msg right-msg">
+														<div className="msg-img" style={{ backgroundImage: 'url(https://image.flaticon.com/icons/svg/327/327779.svg' }} >
+														</div>
+														<div className="msg-bubble">
+															<div className="msg-info">
+																<div className="msg-info-name">Diamta</div>
+																<div className="msg-info-time"><span id='curentTime'>12:45</span></div>
+															</div>
+															<div className="msg-text">
+																Chat with the project's owner.
+															</div>
+														</div>
+													</div>
+													<BuildChatDialog />
+													<div id = 'messagesEnd' style={{ float: "left", clear: "both" }} class='foo' >&nbsp;</div>
+												</div>
+												<p>&nbsp;</p>
+												<div style={{ width: "100%", display: "contents", padding: '2%' }}  >
+													<div style={{ float: "left", width: "48%", display: "block" }} >
+														<div style={{ float: "left", width: "100%", display: "inline" }}>
+															<div id='chatMsgMenu' style={{ float: 'left', width: '90%', height: '70px', padding: '5px', borderTop: '0.5px solid silver', display: displayChatMenu }}>
+																<p id='chatMsgUserId'>{ replyUserName }</p> 
+																<div className='crop' id='chatMsgResponse' style={{ width: '95%', border: 'none', display: 'inline-block', float: 'left' }}>
+																	<img src={ repliedImagePath } style={{ display: repliedImageDisplay }} /> { replyContent }
+																</div>
+																<a title='close' onClick={ handleClickCloseChatMenu } style={{ cursor: 'pointer' }}>X</a>
+															</div>  
+															<div title='close' id='chatFilesPreviewContainer' style={{ float: 'left', height: '50px', width: '10%', display: 'none' }}>
+																<div id='chatFilesPreview' style={{ padding: '5px', borderTop: '0.5px solid silver', width: '98%', float: 'left' }}>
+																</div>
+																<div id='chatFilesPreviewFinishBtnDiv' style={{ width: '2%', float: 'left' }}>
+																	<a title='close' id='chatFilesPreviewFinishBtn' style={{ cursor: 'pointer' }}>X</a>
+																</div>
+															</div>
+														</div>
+														<div style={{ float: "left", width: "100%" }}>
+															<div style={{ marginTop: '1%', marginLeft: '1%' }}>
+																<div style={{ width: '98%', marginLeft: '1%' }} className='row'>
+																	<textarea  
+																		className	= "msger-input" 
+																		style		= {{ whiteSpace: 'pre-wrap', height: '80px' }} 
+																		placeholder	= "Enter your message..."
+																		onChange 	= { e => handleChangeChatMessage( e ) }
+																		value		= { chatMessage }
+																	>
+																	</textarea>
+																</div>
+															</div>
+														</div>
+														<div style={{  float: "left", width: "100%" }}>
+															<button 
+																style	= {{ width: '25%', whiteSpace: 'pre-wrap', height: '37px',  marginTop: '1%' }} 
+																className = "msger-send-btn" 
+																id		= "sendBtn"
+																onClick	= { e => handleClickSendChatMessage( e ) }
+															>
+																<i className='fa fa-plane'></i>Send
+															</button>
+														</div>
+													</div>
+													<div style={{ float: "left", width: "46%", display: "block", paddingLeft: "2%" }} >
+														<Dragger {...props}>
+															<p className="ant-upload-drag-icon">
+																<i className='fa fa-file' style={{ fontSize: '25px', color: '#808080b5' }}></i>&nbsp;Click or drag here to upload files
+															</p>
+														</Dragger>
+													</div>
+												</div>
+											</section>
+										</main>
 									</div>
 								</div>
 							</div>
 						</div>
 					</div>
-	</>
-		);
+				</div>
+			</div>
+		</>
+	);
 };
 export default ChatBox;
-

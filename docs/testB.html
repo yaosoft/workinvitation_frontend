@@ -1,0 +1,71 @@
+
+<html>
+	<body>
+		<div>
+			<p>Scrolling Tests</p>
+		</div>
+		<div style="height: 300px ; overflow-y: auto; margin-left: 20%" id="scrollingDivContainer" onscroll="scroll()">
+			<div id="scrollingDiv" onscroll="scroll()" style="height: 300px; overflow-y: auto;">
+				<p id='foo1'>foo1 </p>
+				<p id='foo2'>foo2 </p>
+				<p id='foo3'>foo3 </p>
+				<p id='foo4'>foo4 </p>
+				<p id='foo5'>foo5 </p>
+				<p id='foo6'>foo6 </p>
+				<p id='foo7'>foo7 </p>
+				<p id='foo8'>foo8 </p>
+				<p id='foo9'>foo9 </p>
+				<p id='foo10'>foo10 </p>
+				<p id='foo11'>foo11 </p>
+				<p id='foo12'>foo12 </p>
+				<p id='foo13'>foo13 </p>
+				<p id='foo14'>foo14 </p>
+				<p id='foo15'>foo15 </p>
+				<p id='foo17'>foo17 </p>
+				<p id='foo18'>foo18 </p>
+				<p id='foo19'>foo19 </p>
+				<p id='foo20'>foo20 </p>
+				<p id='foo21'>foo21 </p>
+				<p id='foo22'>foo22 </p>
+				<p id='foo23'>foo23 </p>
+				<p id='foo24'>foo24 </p>
+				<p id='foo25'>foo25 </p>
+				<p id='foo26'>foo26 </p>
+				<p id='foo27'>foo27 </p>
+				<p id='foo28'>foo28 </p>
+				<p id='foo29'>foo29 </p>
+				<p id='foo30'>foo30 </p>
+				<p id='foo31'>foo31 </p>
+				<p id='foo32'>foo32 </p>
+				<p id='foo33'>foo33 </p>
+				<p id='foo34'>foo34 </p>
+				<p id='foo35'>foo35 </p>
+				<p id='foo36'>foo36 </p>
+				<p id='foo37'>foo37 </p>
+				<p id='foo38'>foo38 </p>
+				<p id='foo39'>foo39 </p>
+				<p id='foo40'>foo40 </p>
+			</div>
+			<div id='end'></div>
+		</div>
+		
+	<script>
+		const oontainerTop = 97; 
+const oontainerBottom = 348
+const eleTop = 3041; 
+const eleBottom = 3144;
+	 
+	 if ( ( eleTop >= oontainerTop && eleBottom <= oontainerBottom ) ||
+		  ( eleTop <= oontainerTop && eleBottom >= oontainerBottom )
+	) {
+ console.log( 'message read!' );
+	 }
+	 else{
+ console.log( 'message NOT read' );	
+	 }
+	</script>
+		
+	<body/>
+
+</html>
+
