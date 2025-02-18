@@ -90,7 +90,14 @@ const ListProjects = ( params ) => {
 			else if( pageName == 'ReceivedProject' ){
 				list = await getReceivedProjects( userId );
 			}
-			setProjectList( list );
+			
+			if( list ){
+				setProjectList( list )
+			}
+			else{
+				console.log( 'Project list not loaded' );
+				return;
+			}
 			setCountProject( list.length );
 		}
 

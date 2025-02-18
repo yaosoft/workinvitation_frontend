@@ -14,8 +14,8 @@ import { SiteContext } from "../../context/site";
 
 const Login = ( params ) => {
 	// context
-	const { logIn }			= useContext( AuthContext );
-	const { getReferrer }	= useContext( SiteContext );
+	const { logIn, setUser }	= useContext( AuthContext );
+	const { getReferrer }		= useContext( SiteContext );
 	
 
 	const [ loginSpin, setLoginSpin ] = useState( 'none' );
@@ -108,6 +108,7 @@ const Login = ( params ) => {
 	
 
 	useEffect(() => {
+		setUser( null );
 		setLoginSpin( 'none' );
 	}, []);
 

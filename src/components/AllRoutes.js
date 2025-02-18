@@ -90,6 +90,10 @@ const AllRoutes = {
 			element:  <Index />,
 			path: 'accueil',
 		},
+		{	// Accueil
+			element:  <Index />,
+			path: '',
+		},
 		{	// Login
 			element:  <Login />,
 			path: 'login',

@@ -18,13 +18,14 @@ const ModalChatBox = ( params ) => {
 	return (
 		<>
 			<ChatBox
-							params={{
-								project: params.params.project,
-								isOwner: params.params.isOwner,
-								messageReceiverId : params.params.messageReceiverId,	
-								messageUserId : params.params.messageUserId,
-							}} 
-						/>
+				params={{
+					messageId:			params.params.messageId,
+					project: 			params.params.project,
+					isOwner: 			params.params.isOwner,
+					messageReceiverId: 	params.params.messageReceiverId,	
+					messageUserId : 	params.params.messageUserId,
+				}} 
+			/>
 		</>
 	);
 };

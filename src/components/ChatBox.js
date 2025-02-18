@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
 
@@ -24,31 +25,36 @@ import {
 	QuestionCircleOutlined
 } from '@ant-design/icons';
 
-const ChatBox = ( params ) => {
 
-	const [ indice, setIndice ] = useState( 0 );
-	const [ msgerChat, setMsgerChat ] = useState( document.createElement("div") );
+const ChatBox = ( params ) => {
+// console.log( 'params', params );
+
+	// 
+	const [ spinerDisplay, setSpinerDisplay ]	= useState( 'block' );
 	
-	const { siteURL }	= useContext( SiteContext );
+	const { siteURL, mySocket }	= useContext( SiteContext );
 	const { getUser }	= useContext( AuthContext );
 	const { 
 		saveMessage, 
 		saveFile, 
 		getMessages, 
-		projectMessages, 
+		userUnreadMessages,
 		deleteChatMessage, 
 		deleteChatFile, 
 		updateMessagesRead,
+		setProjectMessages,
+		projectMessages,
+		getUserUnreadMessages,
+		setUserUnreadMessages,
 	} = useContext( ChatContext );
 
-	var { 
-		currentIntervalId
-	} = useContext( ChatContext );
+	// chat Message receiver ( interlocutor )
 
-	// product id
-	const [searchParams, setSearchParams] = useSearchParams();
-	const [ projectId, setProjectId ] = useState( searchParams.get( 'projectId' ) );
-	const [ project, setProject ] = useState( params.params.project );
+	const [ chatMessageReceiverId, setChatMessageReceiverId ] 			= useState( params.params.messageReceiverId );
+	// project
+	const [ searchParams, setSearchParams ] = useSearchParams();
+	const [ projectId, setProjectId ] 		= useState( params.params.project.id );
+	const [ project, setProject ] 			= useState( params.params.project );
 
 	// setIsOwner
 	const [ isOwner, setIsOwner ] = useState( params.params.isOwner );	
@@ -72,6 +78,17 @@ const ChatBox = ( params ) => {
 		setDisplayChatMenu( 'none' )
 	}
 
+	// chat title
+	const truncateString = ( str, maxLength ) => {// truncate string
+		if (str.length > maxLength) {
+			return str.slice(0, maxLength - 3) + '...';
+		}
+		return str;
+	}
+	const titleText = params.params.project.title ? params.params.project.title : 'Project title';
+	const title = truncateString( titleText, 80 );
+	const [ chatTitle, setChatTitle ] = useState( title );
+
 	// reply div's user name
 	const [ replyUserName, setReplyUserName ] = useState( '' );
 	
@@ -90,12 +107,12 @@ const ChatBox = ( params ) => {
 	//replied image path
 	const [ repliedImagePath, setRepliedImagePath ] = useState( 'none' );
 	
-	// unread messages
-	const [ unreads, setUnreads ] = useState( [] );
-	
 	// message is read
 	const [ isRead, setIsRead ] = useState( [] );
 	
+	// chatbox element
+	const [ chatBox, setChatbox ] = useState( '' );
+
 	// reply to a chat's message
 	const handleClickReply = ( msg, msgid, type, displayName, path ) => {
 		clearEntries();
@@ -118,7 +135,7 @@ const ChatBox = ( params ) => {
 	// scroll up to the replied message
 	const handleClickReplyed = ( messageId ) => {
 		const elt = window.document.getElementById( messageId );
-console.log( messageId );
+// console.log( messageId );
 		// const message 	= messagesPositions.filter( ( messagePosition => messagePosition.messageId == messageId ) )[ 0 ];
 		// const position 	= message.topPosition;
 		
@@ -172,7 +189,7 @@ console.log( messageId );
 	const imageExtentions = [ 'jpg', 'gif', 'png', 'jpeg' ];
 	
 	// get a file extension's icone
-	const getExtensionIcon = ( extension ) => {
+	const getExtensionIcon = ( extension ) => {	// todo: put this in a composant
 
 		if( extension == 'css' )
 			return 'cssIcon.png';
@@ -229,25 +246,126 @@ console.log( messageId );
 		else return 'filesIcon.png';
 	}
 
-	// avoid a scroll to occure avary chat reload
-	const [ currentScrollTop, setCurrentScrollTop ] = useState( 0 );
+	// Set unreads messages alerts with setUserUnreadMessages in Chat context
+	const setUnreads = async( ) => {
+		const unreadMessages = await getUserUnreadMessages( userId );
+// console.log( 'unreadMessages', unreadMessages );
+		if( unreadMessages ){
+			setUserUnreadMessages( unreadMessages );
+		}
+	}
+
+	// Load messages
+	const loadMessages = async ( messagesToLoad ) => {
+
+		setSpinerDisplay( 'block' );
+		
+		// if( !chatBox ){
+// console.log( 'No chatBox' );
+			// return;
+		// }
+		
+console.log( 'loading messages ...' );
+
+		var messages = [];
+		if( messagesToLoad === undefined ){
+			messages = await getMessages( userId, projectId );
+		}
+		else{
+			messages = messagesToLoad;
+		}
+console.log( '---- messages', messages );
+		
+		if( !messages ){
+console.log( 'No message found' );
+			return;
+		}
+
+		const thechatBox = await window.document.getElementById( "msgerChatbox" );
+
+//console.log( 'params.params', params.params );
+		// Note: params.params.messageReceiverId is the project receiver id
+		// if current user is the project owner (in a modal): The project owner receive message from numtiple project worker, then we must get only his message with the selected dialog worker
+//  console.log( 'params.params.messageReceiverId', params.params );
+		if( params.params.isOwner ){ // current is the project owner
+			// params.params.messageUserId == interlocuteur in the dialog with the owner wich can have many
+			const chatBoxMessages = await messages.filter( ( message => 
+				( message.messageUserId == params.params.messageUserId ) && ( message.messageReceiverId == params.params.messageReceiverId ) ||
+				( message.messageReceiverId == params.params.messageUserId ) && ( message.messageUserId == params.params.messageReceiverId )
+			));
+
+			setChatMessages( chatBoxMessages );
+// console.log( 'chatBoxMessages', chatBoxMessages );
+			
+			
+			chatboxScrollingListener( thechatBox, chatBoxMessages );
+			
+			// check new opened message
+			await setViewed( thechatBox, chatBoxMessages );
+			// scroll down the chatbox
+			setTimeout( scrollToMessage, 2000 ); //
+		} // if current user is a project worker: the project worker receive messages only from the project owner 
+		else{				// current user is the receiver
+			setChatMessages( messages ); 
+
+			// chatboxScrollingListener( thechatBox, messages );// To do: settimeout
+			setTimeout( chatboxScrollingListener, 2000, thechatBox, messages ) 
+
+			// check new opened message
+			await setViewed( thechatBox, messages );
+			// scroll down the chatbox
+			setTimeout( scrollToMessage, 2000 ); //
+		}
+
+// console.log( 'ChatMessages', chatMessages );
+		// ind = 1;
+	}
+	
+	// chatbox scrolling listener
+	const chatboxScrollingListener = ( chatBox, messages ) => {
+		// Check viewed messages listener on scroll
+		chatBox.onscroll = async function(){
+console.log( 'chatBox scrolled...' );
+			await setViewed( chatBox, messages );
+
+		}
+	}
+
+	// send websocket message
+	const sendWsMessage = async() => {
+		const wsMessage = userId + '*' + chatMessageReceiverId;
+// alert( userId + '*' + chatMessageReceiverId );
+		mySocket.send( wsMessage );		// mySocket is initializeded in Chat context
+	}
 
 	// delete a chat text message
 	const handleClickDeleteChatMessage = async ( messageId ) => {
 		const rep = await deleteChatMessage( messageId );
+		
+		// send websocket message
+		sendWsMessage();
+
+		// reload message in the chatbox
+		await loadMessages();
 	}
 
 	// delete a chat file message
 	const handleClickDeleteChatFile = async ( messageId ) => {
 		const rep = await deleteChatFile( messageId );
+		
+		// send websocket message
+		sendWsMessage();
+
+		// reload message in the chatbox
+		await loadMessages();
 	}
 
-	// build dialog
+	// build chat dialog
 	const BuildChatDialog = () => {
-// console.log( 'chatMessages.map: ' + chatMessages );
+
 		var count			= 0;
 		var count_unread 	= 0;
-		const userid = getUser.userId;
+
 		return (
 			chatMessages.map( ( message ) => 
 				<div className= { 'msg ' + message.side + '-msg' } {...{ "id": message.type + "_" + message.messageId }} >
@@ -450,19 +568,30 @@ console.log( messageId );
 		)
 	}
 
+	
 
-
-	// chat send message
+	// chat send message or file
 	const handleClickSendChatMessage = async( e ) => {
 		e.preventDefault();
-		var rep = '';
+		
+		// Nothing to save
+		if( !chatMessage && !fileList.length ){ // file message
+			message.error( 'Nothing to do.' )
+			return
+		}
 
+		// scroll to the bottom
+		const elt =  window.document.getElementById( 'messagesEnd' );
+		await elt.scrollIntoView( { behavior: "smooth", block: "end", inline: "nearest" } );
+
+		var rep = '';
+// console.log( 'project', project );
 		// text message
-		if( chatMessage ){		
+		if( chatMessage ){	
 			const data = {
 				message_text 		: chatMessage,
 				receiver_id			: chatMessageReceiverId,
-				ownerId				: chatMessageOwnerId,
+				userId				: userId,	// sender
 				project_id			: project.id,
 				replied_msg_id		: chatRepliedMsgId,
 				replied_file_id		: chatRepliedImageId,
@@ -475,7 +604,7 @@ console.log( messageId );
 		
 			const data = {
 				receiver_id			: chatMessageReceiverId,
-				ownerId				: chatMessageOwnerId,
+				userId				: userId,	// sender
 				project_id			: project.id,
 				replied_msg_id		: chatRepliedMsgId,
 				replied_file_id		: chatRepliedImageId,
@@ -483,13 +612,16 @@ console.log( messageId );
 			rep = await saveFile ( data, fileList );
 		}
 		
-		// Nothing to save
-		if( !chatMessage && !fileList.length ){ // file message
-			message.error( 'Nothing to do.' )
-		}
+		
+		// load message in the chatbox
+		loadMessages()
+		
+		// transmit to websocket canal
+		sendWsMessage();
 		
 		// clear
 		clearEntries();
+
 	}
 
 	// clear
@@ -501,120 +633,94 @@ console.log( messageId );
 		setReplyContent( '' );
 	}
 
-	// chat Message Owner
-	const [ chatMessageOwnerId, setChatMessageOwnerId ] 		= useState( '' );
-	const [ chatMessageReceiverId, setChatMessageReceiverId ] 	= useState( '' );
-
-	// chatbox's relative diff 
-	const [ relatifDiff, setRelatifDiff ] = useState( 0 );
 	
+	// websoket send a message
+	// sendWsMessage();
 	
-	
-
-	// Icons made by Freepik from www.flaticon.com
-
-	var chatIsOpen		= false; // the chat is loaded but the user hevent click on chat modal yet
-	
-// console.log( 'msgerChat:' + msgerChat );
-	var lastLoaded		= '';
-	const http 			= window.location.protocol;
-	const URL  			= window.location.href;
-	const domain 		= 'diamta.com';
-	const serverbase 	= URL.includes( 'localhost' ) ? http + '//localhost/diamta/projects/public/index.php/projects' :  http + '//' + 
-	 domain + '/projects/public/index.php/projects';
-	const chatFileDir 	= URL.includes( 'localhost' ) ? http + '//localhost/diamta/projects/public/uploads/files/chat' : http + '//' +  domain +  '/projects/public/uploads/files/chat'; 
-	function setMessagesRead( project_id ){	// set messages as read
-		const xhttp = new XMLHttpRequest();
-		xhttp.onload = function() {
-			var result = this.responseText;
-// console.log( 'setMessagesRead:' + result );
-		}
-		const server = serverbase + "/setMessagesRead/" + project_id;
-		xhttp.open( "POST", server );
-		xhttp.setRequestHeader( "Content-type", "Content-type: application/json" );
-		xhttp.send();		
-	}
+	// Chat settings
 	useEffect( () => {
-		const elt = document.getElementsByClassName( 'msger-chat' )[ 0 ];
-		// setMsgerChat( elt );
 
-		setProject( params.params.project );
+		// websoket message listener
+		mySocket.onmessage = async function(e) {
+			const wssmsg = e.data;
+// alert( wssmsg );
+			const senderId = wssmsg.split( '*' )[ 0 ];
+			const receiverId = wssmsg.split( '*' )[ 1 ];
 
-		// setIsOwner
-		setIsOwner( params.params.isOwner );	
+			if( receiverId == userId ){
+				
+				// alert( 'receiverId: ' + receiverId + ', ' + 'userId: ' + userId );
 
+				// update new message count alert
+				// setUnreads()			
+				
+				// reload the user's messages
+				await loadMessages();
 
-		// chat message's sender / receiver
-		setChatMessageOwnerId( userId );
-		if( params.params.isOwner === false ){
-			setChatMessageReceiverId( project.ownerId );
+			}
 		}
-		else{
-// console.log( '>>>>>>> params', params );
 
-			setChatMessageReceiverId( params.params.messageReceiverId ); // To do
+		// Chatbox scroll listener
+		const getChatBox = async () => {
+			const thechatBox = await window.document.getElementById( "msgerChatbox" );
+
+			// if( !thechatBox ){
+				// alert( 'No chatbox' );
+				// return
+			// }
+
+			setChatbox( thechatBox );	// set chatbox
+
+			// load Messages
+			await loadMessages();
+
 		}
-	}, [ params.params ] );
-	
+		if( !chatBox )
+			getChatBox();
 
-	// create contact list
-	useEffect( () => {
-		clearEntries();
-		const ind = 0; // Todo: was unable to use setIndice( 1 );
-		currentIntervalId = setInterval( loadMessages, 25000, ind );
 	}, [] );
 
-	// reload messages and manage read ( seen ) messages
-	
-	const loadMessages = async ( ind ) => {
-// console.log( 'Reload ...' );
-// console.log( 'CurrentScrollTop ', currentScrollTop );		
+	// scroll to message
+	const scrollToMessage = async() => {
+	// console.log( '+++++++++++++++++ params.params', params.params );
+		var elt = '';
+		if( params.params.messageId ){
 
-		const messages = await getMessages( userId, projectId );
-		
-		if( !messages ){
-console.log( 'getMessages fails' );
-			return;
+			const eltId = params.params.messageId;
+			if( window.document.getElementById( 'text_' + eltId ) )
+				elt = window.document.getElementById( 'text_' + eltId )
+			if( window.document.getElementById( 'file_' + eltId ) )
+				elt = window.document.getElementById( 'file_' + eltId )
 		}
+		const messageToScrollElt = elt ? elt : window.document.getElementById( 'messagesEnd' );
+console.log( 'messageToScrollElt', messageToScrollElt )
+		await messageToScrollElt.scrollIntoView( { behavior: "smooth", block: "end", inline: "nearest" } );
 
-		const chatBox 		= await window.document.getElementById( "msgerChatbox" );
-		if( !chatBox ){
-console.log( 'No chatBox' );
-			return;
-		}
-
-		// Note: params.params.messageReceiverId is the project receiver id
-		// if current user is the project owner (in a modal): The project owner receive message from numtiple project worker, then we must get only his message with the selected dialog worker
-		if( params.params.isOwner ){ // current is the project owner
-			const chatBoxMessages = await messages.filter( ( message => 
-				( message.messageReceiverId == userId && 
-				message.messageUserId == params.params.messageReceiverId ) ||
-				( message.messageReceiverId == params.params.messageReceiverId && 
-				message.messageUserId == userId )
-			));
-
-			await setChatMessages( chatBoxMessages );
-			await setViewed( messages );
-
-		} // if current user is a project worker: the project worker receive messages only from the project owner 
-		else{				// current user is the receiver
-			await setChatMessages( messages ); // Todo: display only the last message from all the project receivers
-			await setViewed( messages );
-		}
-
-// console.log( 'ind', ind );
-		ind = 1;
+		setSpinerDisplay( 'none' );
 	}
 
-	// set new viewed messages
-	const setViewed = async ( messages ) => {
+
+	// Get messages and load in the chat
+	//const getProjectMessage = async () => {
+		// setSpinerDisplay( 'block' )
+		// const ind = 0; 
+		// await loadMessages( projectMessages );
+		
+	// }
+	
+
+	// check / persist the user's messages viewed on the chatbox visible area
+	const setViewed = async ( chatBox, messages ) => {
+// alert( 'setViewed' );
 		var newReadMessageIds = '';
 		// chatbox position
-		const chatBox 		= await window.document.getElementById( "msgerChatbox" );
+		// const chatBox 		= await window.document.getElementById( "msgerChatbox" );
+		
 		if( !chatBox ){
 console.log( 'Chatbox is not ready!' );
 			return;
 		}
+
 		const chatBoxTop 	= chatBox.offsetTop;
 		const chatBoxBottom = chatBoxTop + chatBox.offsetHeight;
 		
@@ -631,60 +737,35 @@ console.log( 'Chatbox is not ready!' );
 // console.log( 'Message Id ' + message.type + '_' + message.messageId + ' is not found' )
 				return;
 			}
-	
-			
+
 			// message element position
 			const messageEltTop 	= messageElt.offsetTop - scrollTop;
 			const messageEltBottom 	= messageEltTop + messageElt.offsetHeight;
 
-// if( message.messageId == 63 ){
-	// console.log( '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>' );
-	// console.log( 'scrollTop', scrollTop );
-	// console.log( 'messageElt', messageElt );
-	// console.log( 'messageElt.offsetTop', messageElt.offsetTop );
-	// console.log( 'chatBoxTop: ' + chatBox.offsetTop + ' chatBoxBottom: ' + ( + chatBox.offsetTop + chatBox.offsetHeight ) );
-	// console.log( 'messageEltTop: ' + messageEltTop + ' messageEltBottom: ' + messageEltBottom  );
-	// if ( messageEltTop > 0 && ( ( messageEltTop >= chatBoxTop || messageEltBottom <= chatBoxBottom ) || 
-								// ( messageEltTop <= chatBoxTop && messageEltBottom >= chatBoxBottom ) // a message larger than the display window
-	// ) ) {
-// console.log( 'message read!' );
-	// }
-	// else{
-// console.log( 'message NOT read' );	
-	// }
-
-// }	
-
-
-// console.log( 'chatBoxTop: ' + chatBox.offsetTop + ' chatBoxBottom: ' + ( + chatBox.offsetTop + chatBox.offsetHeight ) );
-// console.log( 'messageEltTop: ' + messageEltTop + ' messageEltBottom: ' + messageEltBottom  );
-	 if ( ( messageEltTop >= chatBoxTop && messageEltBottom <= chatBoxBottom ) ||
-		( messageEltTop <= chatBoxTop && messageEltBottom >= chatBoxBottom ) 
-	) {
- // console.log( 'message read!' );
-	 }
-	 else{
-// console.log( 'message NOT read' );	
-	 }
-
-// console.log( '>>>>> is message ' + message.messageId + ', type ' + message.type + ' already viewed: ', message.viewed );
-
-			
-				if ( ( messageEltTop >= chatBoxTop && messageEltBottom <= chatBoxBottom ) ||
-					( messageEltTop <= chatBoxTop && messageEltBottom >= chatBoxBottom )
-				){
-					const text = message.type + '*' + message.messageId;
-					newReadMessageIds = newReadMessageIds + text + '-';
-				}
+			if ( ( messageEltTop >= chatBoxTop && messageEltBottom <= chatBoxBottom ) ||
+				( messageEltTop <= chatBoxTop && messageEltBottom >= chatBoxBottom )
+			){
+				const text = message.type + '*' + message.messageId;
+				newReadMessageIds = newReadMessageIds + text + '-';
+			}
 			
 		}
-		// setIsRead( reads );
-		
-// console.log( 'newReadMessageIds', newReadMessageIds );
-		
-		if( newReadMessageIds ){
+
+		if( newReadMessageIds ){ // unread messages found
+// alert( 'newReadMessageIds: ' + newReadMessageIds );
+			// persist user read message ( they are unread by default ) 
 			await updateMessagesRead( userId, projectId, newReadMessageIds.slice( 0, -1 ) );
-			// alert( reads.length );
+			
+			// reload the user chatbox
+			await loadMessages()
+			
+			// update total unread messages alert
+			await setUnreads();
+			
+			// update interlocutor chatbox
+console.log( '--- sendWsMessage ---' );
+			await sendWsMessage();
+			
 		}
 	}
 
@@ -697,7 +778,7 @@ console.log( 'Chatbox is not ready!' );
 							<div className="card">
 								<div className="card-body pb-0 d-flex justify-content-between">
 									<div style={{ width: '100%' }}>
-										<h4 className="mb-1">Communication and files</h4>
+										<h4 className="mb-1">{ chatTitle }</h4>
 										<main className="cd__main">
 											<section className="msger">
 												<div className="msger-chat" id="msgerChatbox">
@@ -778,6 +859,26 @@ console.log( 'Chatbox is not ready!' );
 					</div>
 				</div>
 			</div>
+			<Space
+				style={{ display: spinerDisplay }}
+			>
+				<Spin
+					indicator={
+						<LoadingOutlined
+							style={{
+									display:		spinerDisplay,
+									fontSize: 		100,
+									color: 			'#fcb800'
+								}}
+							spin
+						/>
+					}
+					fullscreen
+					tip		= "chargement" 
+					size	= "large"
+				/>
+				
+			</Space>
 		</>
 	);
 };

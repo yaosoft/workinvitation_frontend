@@ -22,11 +22,14 @@ const ChatRoom = ( params ) => {
 	const { getUser }	= useContext( AuthContext );
 
 	// project chat message
-	const { projectMessages } = useContext( ChatContext );
-	
-	var { 
-		currentIntervalId
+	// const { projectMessages } = useContext( ChatContext );
+	const { 
+		getMessages,
+		setProjectMessages,
+		projectMessages,
+		currentIntervalId,
 	} = useContext( ChatContext );
+
 
 	// product id
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -34,18 +37,18 @@ const ChatRoom = ( params ) => {
 	const [ project, setProject ] = useState( params.params.project );
 	
 	// user
-	const userId 	= getUser().userId;
+	const userId = getUser() ? getUser().userId : 0;
 
 	// setIsOwner
 	const [ isOwner, setIsOwner ] = useState( params.params ? params.params.isOwner : '' );
 
 	// chat messages
-	const [ chatMessages, setChatMessages ] 			= useState( projectMessages );
+	// const [ chatMessages, setChatMessages ] 			= useState( [] );
 	const [ messageReceiverId, setMessageReceiverId ] 	= useState( '' );
 	const [ messageUserId, setMessageUserId ] 			= useState( '' );
 
 	// messageId
-	const [ msgId, setMsgId ] = useState( '' );
+	const [ messageId, setMessageId ] = useState( '' );
 
 	// chat textarea
 	const [ chatMessage, setChatMessage ] = useState( '' );
@@ -55,13 +58,31 @@ const ChatRoom = ( params ) => {
 		setChatMessage( data )
 	}
 
-	// build dialog
+	// get unread messages
+	const getProjectUnread = ( messageReceiverId, messageUserId ) => {
+		var unread = 0;
+		if( !projectMessages ){
+console.log( 'No projectMessages!' );
+			return;
+		}
+
+		for( const message of projectMessages ){
+			if( 
+				message.messageReceiverId 	== userId && 
+				message.messageUserId 		== messageUserId &&
+				!message.viewed )
+				unread ++
+		}
+		return unread;
+	}
+	
+	const [ chatDialogs, setChatDialogs ] = useState( [] ); // one message per project's chat messages
 	const BuildChatRoomDialog = () => {
 // console.log( '>><<<>>><<< chatMessages', chatMessages );
 		var count			= 0;
 		var count_unread 	= 0;
 		return (
-			chatMessages.map( ( message ) => 
+			chatDialogs.map( ( message ) => 
 				<div className= { 'msg ' + message.side + '-msg' }>
 					<div
 						className="msg-img" style={{ backgroundImage: 'url(https://image.flaticon.com/icons/svg/327/327779.svg' }} >
@@ -73,367 +94,29 @@ const ChatRoom = ( params ) => {
 						</div>
 						<div>{ message.message }</div>
 					</div>
-					{ 
-						message.messageUserId == userId ?
-							<a title='Open the dialog'  style={{ color: 'blue', cursor: 'pointer' }}  onClick={ (e) => handleClickOpenDialog( message.messageReceiverId, message.messageUserId ) }>Author! Open the dialog</a>
-						:
-							<a title='Open the dialog'  style={{ color: 'blue', cursor: 'pointer' }}  onClick={ (e) => handleClickOpenDialog( message.messageUserId, message.messageReceiverId ) }>Open the dialog</a>
-					}
+						<a title='Open the dialog'  style={{ color: 'blue', cursor: 'pointer' }}  onClick={ (e) => handleClickOpenDialog( message.messageUserId, message.messageReceiverId ) }>Open the dialog ( { getProjectUnread( message.messageReceiverId, message.messageUserId ) + ' new'} )&nbsp;&nbsp;</a>
 				</div>
 			)
 		)
 	}
 
-	// 
-	const handleClickOpenDialog = ( messageReceiverId, messageUserId ) => {
+	// set the 2 dialog members for the chatbox
+	const handleClickOpenDialog = ( messageReceiverId, messageUserId ) => {	// inversion: sender will be receiver and receiver will be sender
 		setMessageReceiverId( messageReceiverId );
 		setMessageUserId( messageUserId );
 		setOpenModalChatBox( true );
 	}
 
-	const responseMessage = ( msg, msgid, type, displayname, fileSrc ) => {
-	// alert( type );
-		document.getElementById( 'chatMsgMenu' ).style.display = 'block'; 		// display the responce div
-		document.getElementById( 'chatMsgUserId' ).innerHTML = displayname; 	// display the user name
-		if( type == 'file' ){
-			replied_file_id = msgid;
-			const html = '<img src="' + fileSrc + '" className="chatFilesPreviewClass">';
-			document.getElementById( 'chatMsgResponse' ).innerHTML = html;
-		}
-		else{
-			replied_msg_id = msgid;
-			document.getElementById( 'chatMsgResponse' ).innerHTML = msg;
-		}
-	}
-
 	// chat Message Owner
 	const [ chatMessageOwnerId, setChatMessageOwnerId ] 		= useState( '' );
 	const [ chatMessageReceiverId, setChatMessageReceiverId ] 	= useState( '' );
-
-	// Append text message that reply to image or text message
-	const imgExt = [];
-	const getFileScr = (a) => {
-		return '';
-	}
-	async function appendMessageReply( repliedDisplayName, repliedMessage, displayName, person_img, side, msg, time, cancelable, msgid, msgreceiverid, replyToType, replyTo_FileSrc, replyTo_fileExt, replyTo_fileName, replyTo_fileSize, readbyreceiver ){
-		const type	  		= 'message';
-		replyTo_fileSize 	= parseFloat( replyTo_fileSize ).toFixed(2);
-		const noSrc 		= '';
-		const msgmenu 		= getMsgMenu( type, cancelable, msgid, displayName, msgreceiverid, msg, noSrc, readbyreceiver );
-	// console.log( msgmenu );	
-		const fileSrc		= ( imgExt.includes( replyTo_fileExt ) ) ? replyTo_FileSrc : getFileScr( replyTo_fileExt );
-		
-		const contentHTML 	= ( replyToType == 'file' ) ? "<a href='" + replyTo_FileSrc + "' download><img src='" + fileSrc + "' style='max-width:200px;' ></a><br><a href='" + replyTo_FileSrc + "' download>" + replyTo_fileName + "</a><br>" + replyTo_fileSize + " mo" : repliedMessage;
-		const msgHTML 		= `
-		<div className="msg ${side}-msg">
-		  <div className="msg-bubble">
-			<div className="msg-info" style='display:block'>
-			  <div className="msg-info-name">${repliedDisplayName}</div>
-			  <div className="msg-text" style="white-space: pre-wrap;"><br>${contentHTML}</div>
-			</div>
-			<span>---------------------------</span>
-			<div className="msg-info">
-			  <div className="msg-info-name">${displayName}</div>
-			  <div className="msg-info-time">${time}</div>
-			</div>
-
-			<div className="msg-text" style="white-space: pre-wrap;">${msg}</div>
-			
-		  </div>
-		  ${msgmenu}
-		</div>
-	  `;
-		// document.getElementById( 'curentTime' ).innerHTML = time;
-		await msgerChat.insertAdjacentHTML( "beforeend", msgHTML );
-		// msgerChat.innerHTML = msgHTML;
-		msgerChat.scrollTop += 50000;
-	}
-	
-	//
-	function getMsgMenu( type, cancelable, msgid, displayname, userid, msg, fileSrc, readbyreceiver ){	// message button for cancelation, modification, ...
-	// alert( msg );
-		// read
-		var read = '';
-		if( readbyreceiver === true ) 
-			read = '<span style="color:green">read</span>';
-		else if( readbyreceiver === false )
-			read = '<span style="color:silver">not read</span>';
-		
-		// cancel
-		var cancel = '';
-		
-		if( cancelable )
-			cancel = '<a title=\'delete\' style="cursor:pointer; color:red;" onclick="deleteMessage( ' + msgid + ', \'' + type + '\' );" >&nbsp;x</a>';
-		
-		// reply
-		msg = msg.replace(/'/g, "&lsquo;");
-		var respond = '';
-		if( !isOwner ){
-			respond = '<a title=\'reply\' style="cursor:pointer; color:blue;" onclick="responseMessage( \'' + msg + '\', ' + msgid + ', \'' + type + '\', \'' + displayname + '\', \'' + fileSrc + '\' );">&nbsp;reply</a>';
-		}
-		else{
-			respond = '<a title=\'reply\' style="cursor:pointer; color:blue;" onclick="handleClickOpenDialog( \'' + msgid + '\' );">&nbsp;open dialog</a>';
-		}
-
-		const html = '<div style="font-size:11px; ">' + read + ' ' + respond + ' ' + cancel + '</div>';
-		return html;
-	}
-
-	//
-	const length = 500;
-	const appendMessage = async( displayname, img, side, msg, time, cancelable, msgid, msgreceiverid, readbyreceiver ) => {
-		const type	  = 'message';
-		const fileSrc = '';
-		const msgmenu = getMsgMenu( type, cancelable, msgid, displayname, msgreceiverid, msg, fileSrc, readbyreceiver );
-		const msgHTML = `
-		<div className="msg ${side}-msg">
-		  <div className="msg-bubble">
-			<div className="msg-info">
-			  <div className="msg-info-name">${displayname}</div>
-			  <div className="msg-info-time">${time}</div>
-			</div>
-
-			<div className="msg-text" style="white-space: pre-wrap;">${msg}</div>
-			
-		  </div>
-		  ${msgmenu}
-		</div>`;
-		// document.getElementById( 'curentTime' ).innerHTML = time;
-		await msgerChat.insertAdjacentHTML( "beforeend", msgHTML );
-		// msgerChat.innerHTML = msgHTML;
-		var divMessagelength = length
-		msgerChat.scrollTop += 50000;
-	}
-
-	//
-	async function appendFile( displayname, person_img, message_side, fileName, fileURL, fileSize, fileExt, message_time, cancelable, msgid, msgreceiverid, readbyreceiver ){
-		const type		= "file";
-		fileSize		= parseFloat( fileSize ).toFixed(2);
-		const fileSrc	= ( imgExt.includes( fileExt ) ) ? fileURL : getFileScr( fileExt );
-		const msgmenu 	= getMsgMenu( type, cancelable, msgid, displayname, msgreceiverid, fileName, fileSrc, readbyreceiver );
-		const imgHTML 	= `
-		<div className="msg ${message_side}-msg">
-
-		<div className="msg-bubble">
-			<div className="msg-info">
-			  <div className="msg-info-name">${displayname}</div>
-			  <div className="msg-info-time">${message_time}</div>
-			</div>
-			<div className="msg-text"><a href='${fileURL}' download><img style='max-width:200px;' src='${fileSrc}'></a><br><a href='${fileURL}' download>${fileName}</a> <br> ${fileSize} mo</div>
-		  </div>
-		  ${msgmenu}
-		</div>
-	  `;
-		// document.getElementById( 'curentTime' ).innerHTML = time;
-		await msgerChat.insertAdjacentHTML( "beforeend", imgHTML );
-		
-		msgerChat.scrollTop += 50000;
-
-	}
-
-	//
-	async function loadMessages( messages ){
-		var count 		 = 0;
-		var count_unread = 0;
-		const userid = getUser.userId
-		for( var key01 in messages ){
-			if ( messages.hasOwnProperty( key01 ) ) {
-
-				for( var key02 in messages[ key01 ] ){
-					const message = messages[ key01 ];
-					if ( message.hasOwnProperty( key02 ) ) {
-						// get messages data;
-						const username 			= message.name;		// current user
-						// const msgreceivername 	= message.msgusername;
-						const msgusername 		= message.messageUserName;
-						const msguserid 		= message.messageUserId;
-						const msgreceiverid 	= message.messageReceiverId;
-						const person_img 		= PERSON_IMG;
-						const message_side 		= message.side;
-						const message_text 		= message.message;
-						const message_time 		= message.displayDate;
-						const type 				= message.type;
-						const viewed 			= message.viewed;
-						const cancelable		= message.canbedeleted == '1' ? true : false;
-						const msgid				= message.messageId;
-						var displayname 		= ( userid == msguserid ) ? 'You' : msgusername.split( ' ' )[0];
-						if( !viewed && message.isReceiver )   
-							count_unread++;
-						
-						var readbyreceiver = '';
-						if( userid == msguserid && viewed )
-							readbyreceiver = true;
-						else if( userid == msguserid && !viewed )
-							readbyreceiver = false;
-							
-						// display messages data
-						if( type == 'text' ){ 				// display a text message
-							const repliedMessage 		= message.repliedMessage;
-							const category 				= repliedMessage.category;
-							
-							if( category == null || category == 'A' ){	// not amessage reply
-
-								await appendMessage( displayname, person_img, message_side, message_text, message_time, cancelable, msgid, msgreceiverid, readbyreceiver );
-								
-							}
-							else if( category == 'B' ||  category == 'C' ){		// display a text message replying to a message
-								const repliedDisplayName 	= repliedMessage.name.split( ' ' )[0] ;
-								displayname 		= ( userid == msguserid ) ? 'You replied' : msgusername.split( ' ' )[0] + ' replied';
-								var replyToType  			= '';
-								var replyTo_FileSrc			= '';
-								var replyTo_fileExt 		= '';
-								var replyTo_fileName		= '';
-								var replyTo_fileSize		= '';
-								var repliedMsg				= '';
-								if( category == 'C' ){
-									replyToType 		= 'file';
-									replyTo_FileSrc		= chatFileDir + "/" + repliedMessage.replied_fileSrc;
-									replyTo_fileExt 	= repliedMessage.replied_fileExt;
-									replyTo_fileName 	= repliedMessage.replied_fileName;
-									replyTo_fileSize	= repliedMessage.replied_fileSize;
-								}
-								else{
-									replyToType = 'message';
-									repliedMsg	= repliedMessage.replied_message;
-								}
-								
-								await appendMessageReply( repliedDisplayName, repliedMsg, displayname, person_img, message_side, message_text, message_time, cancelable, msgid, msgreceiverid, replyToType, replyTo_FileSrc, replyTo_fileExt, replyTo_fileName, replyTo_fileSize, readbyreceiver );
-							}
-						}
-						else{ 	 				// display image message
-							const fileName 	= message.fileName; // original name
-							const path 		= message.path; 	// name on the server
-							const fileSize 	= parseFloat( message.size ).toFixed(2);
-							const fileExt  	= message.fileExtension;
-							const fileURL  	= chatFileDir + "/" + path;  
-							
-							const repliedFile 		= message.repliedFile;
-							const category 			= repliedFile.category;	
-
-							if( category == null || category == 'A' ){	// not a message reply
-								displayname 		= ( userid == msguserid ) ? 'You' : msgusername.split( ' ' )[0];
-								await appendFile( displayname, person_img, message_side, fileName, fileURL, fileSize, fileExt, message_time, cancelable, msgid, msgreceiverid, readbyreceiver );	
-								
-							}
-							else if( category == 'D' || category == 'E' ){		// File replying to a text file
-
-								const repliedDisplayName = repliedFile.name;
-								displayname 			= ( userid == msguserid ) ? 'You reply' : msgusername.split( ' ' )[0] + ' replied';
-								// displayname				= 'You replied';
-								var replyToType  		= '';
-								var replyTo_FileSrc		= '';
-								var replyTo_fileExt 	= '';
-								var replyTo_fileName	= '';
-								var replyTo_fileSize	= '';
-								var repliedMsg  		= repliedFile.replied_message;
-								if( category == 'E' ){
-
-									replyToType 		= 'file';
-									replyTo_FileSrc		= chatFileDir + "/" + repliedFile.replied_fileSrc;
-									replyTo_fileExt 	= repliedFile.replied_fileExt;
-									replyTo_fileName 	= repliedFile.replied_fileName;
-									replyTo_fileSize	= repliedFile.replied_fileSize;
-								}
-								else{
-
-									replyToType = 'message';
-									repliedMsg	= repliedFile.replied_message; 
-								}
-								await appendFileReply( repliedDisplayName, repliedMsg, displayname, person_img, message_side, fileName, fileURL, fileExt, fileSize, message_time, cancelable, msgid, msgreceiverid, replyToType, replyTo_FileSrc, replyTo_fileExt, replyTo_fileName, replyTo_fileSize, readbyreceiver );
-							}
-						}
-						count++;
-						break;
-					}
-				}
-			}
-		}
-		// Update all projects message as read
-		document.getElementById( 'countMessages' ).innerHTML = count_unread + ' new';
-	}
-	
-
-	// Append text message that reply to image or text message
-	async function appendFileReply( repliedDisplayName, repliedMessage, displayName, person_img, side, fileName, fileSrc, fileExt, fileSize, time, cancelable, msgid, msgreceiverid, replyTo_Type, replyTo_FileSrc, replyTo_fileExt, replyTo_fileName, replyTo_fileSize, readbyreceiver ){
-		const type	  		= 'file';
-		const noSrc 		= '';
-		const fileSrc01		= ( imgExt.includes( replyTo_fileExt ) ) ? replyTo_FileSrc : getFileScr( replyTo_fileExt );
-		const fileSrc02		= ( imgExt.includes( fileExt ) ) ? fileSrc : getFileScr( fileExt );
-		const msgmenu 		= getMsgMenu( type, cancelable, msgid, displayName, msgreceiverid, fileName, fileSrc02, readbyreceiver );
-		fileSize			= parseFloat( fileSize ).toFixed(2);
-		replyTo_fileSize 	= parseFloat( replyTo_fileSize ).toFixed(2);
-		
-		const contentHTML01 = ( replyTo_Type == 'file' ) ? "<a href='" + replyTo_FileSrc + "' download><img src='" + fileSrc01 + "' style='max-width:200px;' ></a><br><a href='" + replyTo_FileSrc + "' download>" + replyTo_fileName + "</a><br>" + replyTo_fileSize + " mo" : repliedMessage;
-		
-		const contentHTML02 = "<a href='" + fileSrc02 + "' download><img src='" + fileSrc02 + "' style='max-width:200px;' ></a><br><a href='" + replyTo_FileSrc + "' download>" + fileName + "</a><br>" + fileSize + " mo";
-		
-		const msgHTML = `
-		<div className="msg ${side}-msg">
-		  <div className="msg-bubble">
-			<div className="msg-info" style='display:block'>
-			  <div className="msg-info-name">${repliedDisplayName}</div>
-			  <div className="msg-text" style="white-space: pre-wrap;"><br>${contentHTML01}</div>
-			</div>
-			<span>---------------------------</span>
-			<div className="msg-info">
-			  <div className="msg-info-name">${displayName}</div>
-			  <div className="msg-info-time">${time}</div>
-			</div>
-			<div>${contentHTML02}</div>
-		  </div>
-		  ${msgmenu}
-		</div>`;
-		
-		// document.getElementById( 'curentTime' ).innerHTML = time;
-		await msgerChat.insertAdjacentHTML( "beforeend", msgHTML );
-		// msgerChat.innerHTML = msgHTML;
-		msgerChat.scrollTop += 50000;
-	}	
-	
-	const sendBtn 			= document.getElementById("sendBtn");
-	const fileBtn 			= document.getElementById("fileBtn");
-	const responseFinishBtn = document.getElementById("responseFinishBtn");
-
-
-	// Icons made by Freepik from www.flaticon.com
-	const PERSON_IMG 	= '';
-	var bot_name  		= '';
-	var person_name 	= '';
-	var project_id 		= '';
-	var server 			= '';
-	var receiver_id 	= '';
-	var replied_msg_id	= '';
-	var replied_file_id = '';
-	var modalOpened		= false;
-	var haveNew			= true;
-	var chatIsOpen		= false; // the chat is loaded but the user hevent click on chat modal yet
-	
-// console.log( 'msgerChat:' + msgerChat );
-	var lastLoaded		= '';
-	var haveNew			= true;
-	const http 			= window.location.protocol;
-	const URL  			= window.location.href;
-	const domain 		= 'diamta.com';
-	const serverbase 	= URL.includes( 'localhost' ) ? http + '//localhost/diamta/projects/public/index.php/projects' :  http + '//' + 
-	 domain + '/projects/public/index.php/projects';
-	const chatFileDir 	= URL.includes( 'localhost' ) ? http + '//localhost/diamta/projects/public/uploads/files/chat' : http + '//' +  domain +  '/projects/public/uploads/files/chat'; 
-	function setMessagesRead( project_id ){	// set messages as read
-		const xhttp = new XMLHttpRequest();
-		xhttp.onload = function() {
-			var result = this.responseText;
-	console.log( 'setMessagesRead:' + result );
-		}
-		const server = serverbase + "/setMessagesRead/" + project_id;
-		xhttp.open( "POST", server );
-		xhttp.setRequestHeader( "Content-type", "Content-type: application/json" );
-		xhttp.send();		
-	}
 	
 	// Modal
 	const [ openModalChatBox, setOpenModalChatBox ] = useState(false);
 	const onOpenModalChatBox  	= () => setOpenModalChatBox(true);
 	const onCloseModalChatBox 	= async () => {
-		clearInterval( currentIntervalId );
+
+		window.clearInterval( currentIntervalId );
 		setOpenModalChatBox(false)
 	};
 
@@ -443,7 +126,7 @@ const ChatRoom = ( params ) => {
 		const projectObj = params.params.project;
 		setProject( projectObj );
 		const owner = params.params.isOwner;
-		setIsOwner( true );
+		// setIsOwner( true );
 		// chat message's sender / receiver
 		if( owner === false ){
 			setChatMessageOwnerId( userId );
@@ -459,9 +142,34 @@ const ChatRoom = ( params ) => {
 	
 	
 	useEffect( () => {
-	// set chatroom messages
-		setChatMessages( projectMessages );
-	}, [ projectMessages ] );
+		// set chatroom messages
+
+		
+		const getChatDialogs = async () => {
+			const messages = await getMessages( userId, projectId );
+// console.log( '>>>>>>> messages', messages );
+			setProjectMessages( messages );
+			const messageListId = Array();
+			const dialogs = Array();
+
+			// Get one message for each project's chat messages
+			for( const message of messages ){
+				if( !messageListId.includes( message.messageUserId ) ) {
+					messageListId.push( message.messageUserId );
+					if( message.messageUserId != userId )
+						dialogs.push( message )
+				}
+			}
+			setChatDialogs( dialogs );
+		}
+
+		getChatDialogs()
+ 
+		//if( projectMessages.length == 0 )
+		//	getChatDialogs()
+		//else
+		//	setChatDialogs( projectMessages );
+	}, [] );
 	
 	
 	return (
@@ -469,11 +177,11 @@ const ChatRoom = ( params ) => {
 			<Modal open={ openModalChatBox } onClose={ onCloseModalChatBox } center>
 				<ModalChatBox params =
 					{{
-						project: params.params.project,
-						isOwner: params.params.isOwner,
-						messageReceiverId : messageReceiverId,
-						messageUserId : messageUserId,
-						chatMessages: chatMessages
+						messageId:				messageId,
+						project: 				params.params.project,
+						isOwner: 				params.params.isOwner,
+						messageReceiverId:	 	messageReceiverId,
+						messageUserId:		 	messageUserId,
 					}}
 				/>
 			</Modal>

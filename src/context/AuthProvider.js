@@ -64,8 +64,7 @@ export const AuthProvider = ({ children }) => {
 		// }
 		
 		// logout on the frontend
-		setUser( null );
-		
+
 		return true;
 	}
 	
@@ -93,6 +92,7 @@ export const AuthProvider = ({ children }) => {
 	}
 	
 	useEffect (() => {
+		setUser( null );
 		const data = localStorage.getItem( 'user' );
 		if (data) {
 			setUser( JSON.parse(data) );
@@ -108,6 +108,7 @@ export const AuthProvider = ({ children }) => {
 			value={{ 
 				logIn, 
 				getUser,
+				setUser,
 				logOut,
 				isAuthenticated,
 				isValidPassword

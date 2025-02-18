@@ -5,6 +5,7 @@ import Footer from '../Footer';
 import Sidebar from '../Sidebar';
 import ChatBox from '../ChatBox';
 import ChatRoom from '../ChatRoom';
+import Test from '../Test';
 import Breadcrumbs from '../Breadcrumbs';
 import { AuthContext } from '../../context/AuthProvider';
 import { ChatContext } from '../../context/Chat';
@@ -22,11 +23,16 @@ const Project = ( params ) => {
 	Moment.globalMoment = moment;
 	// Set the locale for every react-moment instance to French.
 	// Moment.globalLocale = 'fr';
-	
-	// get the project id
+
+	// Project id
 	const [ searchParams, setSearchParams ] = useSearchParams();
-	const [ projectId, setProjectId ] = useState( '' );
-	const pageType = projectId ? 'new' : 'edit';
+	const id = searchParams.get( 'projectId' );
+	const pageType = id ? 'new' : 'edit';	
+	const [ projectId, setProjectId ] = useState( id );
+	
+	// Project status
+	const status = searchParams.get( 'projectStatus' );
+	const [ projectStatus, setProjectStatus ] = useState( status );
 
 	// get the project obj
 	const [ project, setProject ] = useState( {} );
@@ -40,13 +46,11 @@ const Project = ( params ) => {
 	const [ countProjectInvitation, setCountProjectInvitation ] = useState( 0 );
 	const [ projectInvitS, setProjectInvitS ] = useState( '' );
 
-	// project user Status
-	const [ projectStatus, setProjectStatus ] = useState( [] );
 
 	// check if user is owner
 	const { getUser }	= useContext( AuthContext );
-	const [ userId, setUserId ] = useState( '' );
-
+	const [ userId, setUserId ] = useState( getUser().userId );
+	
 	const { isOwner, getProject, getProjectStatus, getProjectInvitations }	= useContext( ProjectContext );
 	const [ isProjectOwner, setIsProjectOwner ] = useState( '' );
 
@@ -70,7 +74,7 @@ const Project = ( params ) => {
 	const [ openModalInvitationResent, setOpenModalInvitationResent ] = useState(false);
 	const onOpenModalInvitationResent  	= () => setOpenModalInvitationResent(true);
 	const onCloseModalInvitationResent 	= async () => {
-		await getProjectData( projectId );
+		// await getProjectData( projectId );
 		setOpenModalInvitationResent(false)
 	};
 	
@@ -92,7 +96,7 @@ const Project = ( params ) => {
 				{
 					isProjectOwner && 
 					<Link 
-						to	 	= { '/project/edit/?projectId=' + projectId }
+						to	 	= { '/project/edit/?projectId=' + id }
 						title 	= { 'Edit the project' }
 					>
 						<button>
@@ -122,63 +126,55 @@ const Project = ( params ) => {
 			)
 		)
 	}
-	
-	// projectId
+
+
+
+	// 
 	useEffect( () => {
-		const getIdFromUrl = async () => {
-			const id = await searchParams.get( 'projectId' );		
-			setProjectId( id );
+// alert( project.id );
+		// get project data
+		const a = async () => {
+			const theProject = await getProject( projectId, projectStatus, userId );
+			setProject ( theProject );
+console.log( 'theProject', theProject );
 		}
-		getIdFromUrl();
-	}, [] );
-
-	// get project data
-	useEffect( () => {
-		if( !projectId )
-			return
-
-		getProjectData( projectId );
-	}, [ projectId ] );
-
-	// chat get messages
-	useEffect( () => {
-		if( !userId )
+		if( project.id === undefined )
+			a()
+		else
 			return
 		
-		const getAllMessages = async () => {
-			const rep = await getMessages( userId, projectId ); // this use a context to persist messages
+		// is owner
+		const checkOwner = async () => {
+			const isowner = await isOwner( userId, projectId );
+			setIsProjectOwner ( isowner );
 		}
-		getAllMessages();
-	}, [ userId ] );
-	
-	const getProjectData = async ( projectId ) => {
+		if( isProjectOwner == '' )
+			checkOwner()
 
-		const user_id = await getUser().userId;
-
-		setUserId( user_id );
-
-		const isowner = await isOwner( user_id, projectId );
-
-		setIsProjectOwner ( isowner );
-
-		const projectStatus = await searchParams.get( 'projectStatus' );
-		const userId = await searchParams.get( 'userId' );
-			
-		const theproject = await getProject( projectId, projectStatus, userId  );
-		setProject ( theproject );
-
-		const projectInvitation = await getProjectInvitations( user_id, projectId );
-// console.log( 'theproject', theproject );
-		setProjectInvitation( projectInvitation );
-		setCountProjectInvitation( projectInvitation.length );
-		if( projectInvitation.length )
-			setProjectInvitS( 's' )
-
-		const getStatus = async () => {
-			const status = await getProjectStatus( projectId );
-			setProjectStatus( status );			
+		// project's invitation
+		const getProjectInvitation = async () => {
+			const projectInvitation = await getProjectInvitations( userId, projectId );
+			if( !projectInvitation.length ){
+				console.log( 'No project Invitation' );
+			}
+			else{
+				setProjectInvitation( projectInvitation );
+				setCountProjectInvitation( projectInvitation.length );
+			}
+			if( projectInvitation.length )
+				setProjectInvitS( 's' )
 		}
-	}
+		if( projectInvitation.length == 0 && isProjectOwner )
+			getProjectInvitation()
+
+		// const getAllMessages = async () => {
+			// const rep = await getMessages( userId, id ); // this use a context to persist messages
+		// }
+		// getAllMessages();
+	}, [] );
+
+
+	// getProjectData( projectId );
 
 	return (
 		
@@ -265,24 +261,29 @@ const Project = ( params ) => {
                     </div>
                 </div>
 				{ 
-					isProjectOwner !== true ?
-						isProjectOwner === false &&
+					project.id !== undefined &&
+						isProjectOwner === false ?
 							<ChatBox
+								params={{
+									project: 			project,
+									isOwner: 			isProjectOwner,
+									messageId:			'',
+									messageReceiverId: 	project.ownerId,
+									messageUserId: 		userId,
+								}} 
+							/>
+						:
+						isProjectOwner === true && project.id !== undefined &&
+							<ChatRoom 
 								params={{
 									project: project,
 									isOwner: isProjectOwner,
 								}} 
 							/>
-					:
-					<ChatRoom 
-						params={{
-							project: project,
-							isOwner: isProjectOwner,
-						}} 
-					/>
 							
 				}
-                <div className="row">
+                { isProjectOwner &&
+				<div className="row">
                     <div className="col-lg-12">
                         <div className="card">
                             <div className="card-body">
@@ -316,9 +317,10 @@ const Project = ( params ) => {
                         </div>                        
                     </div>
                 </div>
-				</div>
-            </div>
-			<Footer />
+				}
+			</div>
+        </div>
+		<Footer />
 		</>
 	);
 };

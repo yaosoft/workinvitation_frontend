@@ -11,9 +11,41 @@ import {
 	LoadingOutlined
 } from '@ant-design/icons';
 
+import { ChatContext } from '../context/Chat';
+import moment from 'moment/min/moment-with-locales';
+import Moment from 'react-moment';
+import { Modal } from 'react-responsive-modal';
+import 'react-responsive-modal/styles.css';
+
+import '../sidebarOverrides.css';
+import '../chatStyles.css';
+
+import ModalChatBox from './ModalChatBox';
+
+import '../modalOverrides.css';
+import '../chatStylesOverrides.css';
+import '../headerOverrides.css';
+import { SiteContext } from '../context/site';
+
 const Header = ( params ) => {
 
-	const { isAuthenticated, logOut, getUser } = useContext( AuthContext );
+	const { isAuthenticated, logOut, getUser, setUser } = useContext( AuthContext );
+	const navigate = useNavigate();
+	
+	const userId = getUser().userId;
+	
+	const { siteURL, mySocket }	= useContext( SiteContext );
+	
+	const { 
+		userUnreadMessages,
+		getUserUnreadMessages,
+		setUserUnreadMessages,
+		getMessages, // get project messages
+		projectMessages, 
+		setProjectMessages,
+		currentIntervalId,
+		chatMessageReceiverId,
+	} = useContext( ChatContext );
 
 	// Message alert
 	const [ messageAlertExpanded, setMessageAlertExpanded ] = useState( false );
@@ -52,26 +84,146 @@ const Header = ( params ) => {
 	}	
 	
 	// Login / logout
-	const navigate = useNavigate();
 	const handleClickLogInOut = async( event ) => {
 		event.preventDefault();
 		if( isAuthenticated() ){
-			const resp = await logOut();
-			if( resp !== true  ){
-				message.error( resp );
-				return;
-			}
+			// const resp = await logOut();
+			// if( resp !== true  ){
+				// message.error( resp );
+				// return;
+			// }
+			setUser( null );
 			
 		}
-		
 
 		navigate( '/login' )
 	}
 
+	// User unread message
+	const [ totalUnread, setTotalUnread ] = useState( 0 );
+	useEffect( () => {
+		// 
+		const getUnread = async () =>{
+			const unreadMessages = await getUserUnreadMessages( userId );
+// console.log( 'unreadMessages', unreadMessages );
+			if( unreadMessages ){
+				setUserUnreadMessages( unreadMessages );
+				const total = unreadMessages.length;
+				setTotalUnread( total )
+			}
+			else{
+console.log( 'Unable to get unreadMessages', unreadMessages );	
+			}
+		}
+		getUnread();
+		// setInterval( getUnread, 15000 );
+		
+		// websoket message listener
+		mySocket.onmessage = async function(e) {
+			const wssmsg = e.data;
+// alert( wssmsg );
+			const senderId = wssmsg.split( '*' )[ 0 ];
+			const receiverId = wssmsg.split( '*' )[ 1 ];
+
+			if( receiverId == userId ){
+
+				await getUnread();
+
+			}
+		}
+
+		
+	}, [] );
+	
+
+	
+	// Open a chatbox dialog
+	const [ isOwner, setIsOwner ] 						= useState( '' );
+	const [ project, setProject ] 						= useState( '' );
+	const [ messageReceiverId, setMessageReceiverId ] 	= useState( '' );
+	const [ messageUserId, setMessageUserId ] 			= useState( '' );
+	const [ messageId, setMessageId ] 					= useState( '' );
+	const handleClickOpenDialog = async ( messageSenderId, project, isOwner, themessageId ) => { 
+
+		// If the element is already on the page, just scroll down to it
+		var elt = '';
+		if( window.document.getElementById( 'text_' + themessageId ) )
+			elt = window.document.getElementById( 'text_' + themessageId )
+		else if( window.document.getElementById( 'file_' + themessageId ) )
+			elt = window.document.getElementById( 'file_' + themessageId )
+
+		if( elt ){
+			elt.scrollIntoView( { behavior: "smooth", block: "end", inline: "nearest" } );
+			return
+		}
+		
+		// open the chatbox modal
+		setMessageReceiverId( messageSenderId );		// inversion: sender will be receiver and receiver will be sender
+		setMessageUserId( userId );
+		setMessageId( themessageId );
+		
+		setIsOwner( isOwner );
+		setProject( project );
+		const messages = await getMessages( userId, project.id );
+		setProjectMessages( messages );
+// console.log( 'userId', userId );		
+// console.log( 'project.id', project.id );	
+// console.log( '>>> messages >>>', messages );
+
+		setOpenModalChatBox( true );
+	}
+	
+	// chat modal
+	const [ openModalChatBox, setOpenModalChatBox ] = useState(false);
+	const onOpenModalChatBox  	= () => setOpenModalChatBox(true);
+	const onCloseModalChatBox 	= async () => {
+console.log( 'currentIntervalId', currentIntervalId );
+// alert( 'clearInterval' );
+		// await window.clearInterval( currentIntervalId );
+		setOpenModalChatBox(false)
+	};
+	
+	// truncate string
+	const truncateString = ( str, maxLength ) => {
+		if (str.length > maxLength) {
+			return str.slice(0, maxLength - 3) + '...';
+		}
+		return str;
+	}
+
+	
+	//
+	const BuildUnreadMessageSender = () =>{ return ( 
+		userUnreadMessages.map( message =>
+			<li className="notification-unread">
+				<a style={{ cursor: 'pointer' }} onClick = { e => handleClickOpenDialog( message.senderId, message.project, message.isOwner, message.messageId ) } >
+					<img className="float-left mr-3 avatar-img" src="./img/avatar/1.jpg" alt=""/>
+					<div className="notification-content">
+						<div className="notification-heading">{ message.senderName }</div>
+						<div className="notification-timestamp">{ message.displayDate }</div>
+						<div className="notification-text">{ message.messageText ? truncateString( message.messageText, 45 ) : truncateString( message.messageFileName, 45 ) }</div>
+					</div>
+				</a>
+			</li>
+		)
+	)}
+
 	return (
 		<>
 		<SecuredPagesAuth />
-		<div className="header">    
+		<Modal open={ openModalChatBox } onClose={ onCloseModalChatBox } center>
+			<ModalChatBox params =
+				{{
+					messageId:			messageId,
+					project: 			project,
+					isOwner: 			isOwner,
+					messageReceiverId: 	messageReceiverId,
+					messageUserId: 		messageUserId,
+
+				}}
+			/>
+		</Modal>
+		<div className="header">
 					<div className="header-content clearfix">
 						
 						<div className="nav-control">
@@ -99,40 +251,21 @@ const Header = ( params ) => {
 										onClick 	= { e => handleClickMessageAlertExpanded( e ) }
 									>
 										<i className="mdi mdi-email-outline"></i>
-										<span className="badge badge-pill gradient-1">3</span>
+										<span className="badge badge-pill gradient-1">{ totalUnread > 10 ? '+10' : totalUnread }</span>
 									</Link>
 									<div 
 										className="drop-down animated fadeIn dropdown-menu" 
 										style={{ display: messageAlertExpanded ? 'block' : 'none' }}
 									>
 										<div className="dropdown-content-heading d-flex justify-content-between">
-											<span className="">3 New Messages</span>  
+											<span className="">{ totalUnread } New Messages</span>  
 											<a href="javascript:void()" className="d-inline-block">
-												<span className="badge badge-pill gradient-1">3</span>
+												<span className="badge badge-pill gradient-1">{ totalUnread }</span>
 											</a>
 										</div>
-										<div className="dropdown-content-body">
+										<div className="dropdown-content-body" style={{ height: '250px', overflowY: 'auto' }}>
 											<ul>
-												<li className="notification-unread">
-													<a href="javascript:void()">
-														<img className="float-left mr-3 avatar-img" src="./img/avatar/1.jpg" alt=""/>
-														<div className="notification-content">
-															<div className="notification-heading">Saiful Islam</div>
-															<div className="notification-timestamp">08 Hours ago</div>
-															<div className="notification-text">Hi Teddy, Just wanted to let you ...</div>
-														</div>
-													</a>
-												</li>
-												<li className="notification-unread">
-													<a href="javascript:void()">
-														<img className="float-left mr-3 avatar-img" src="./img/avatar/2.jpg" alt=""/>
-														<div className="notification-content">
-															<div className="notification-heading">Adam Smith</div>
-															<div className="notification-timestamp">08 Hours ago</div>
-															<div className="notification-text">Can you do me a favour?</div>
-														</div>
-													</a>
-												</li>
+												<BuildUnreadMessageSender />
 											</ul>
 										</div>
 									</div>
@@ -142,7 +275,7 @@ const Header = ( params ) => {
 										onClick = { e => handleClickAlertExpanded( e ) }
 									>
 										<i className="mdi mdi-bell-outline"></i>
-										<span className="badge badge-pill gradient-2">3</span>
+										<span className="badge badge-pill gradient-2">0</span>
 									</Link>
 									<div 
 										style={{ display: alertExpanded ? 'block' : 'none' }}

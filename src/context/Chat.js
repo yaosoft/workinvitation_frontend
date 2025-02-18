@@ -85,8 +85,8 @@ export const ChatProvider = ({ children }) => {
 		return resp;
 	};
 
-	// get messages
-	const getMessages = async ( userId, projectId ) => {
+	// get projec messages
+	const getMessages = async ( userId, projectId ) => { // Todo; rename to getProjectMessages
 		
 		const url		= base_api_url + 'chat/getMessages?userId=' + userId + '&projectId=' + projectId;
 		const data 		= {};
@@ -95,12 +95,12 @@ export const ChatProvider = ({ children }) => {
 
 		const messages = await fetchData( url, data, method, spiner );
 		
-		setProjectMessages( messages ); // a static copy of the messages
+		// setProjectMessages( messages ); // a static copy of the messages
 		
 		return messages;
 	}
 	
-	//
+	// curent project messages
 	const [ projectMessages, setProjectMessages ] = useState( [] );
 
 	// delete a chat message
@@ -143,6 +143,26 @@ export const ChatProvider = ({ children }) => {
 		return resp;
 	}
 
+	// project's owner unread message for a project
+	var projectUnreadMessage = [];
+
+	// count all user unread message
+	const [ userUnreadMessages, setUserUnreadMessages ] = useState( [] );
+
+	// count all user unread messae
+	const getUserUnreadMessages = async ( userId ) => {
+		const url		= base_api_url + 'chat/user/unread?userId=' + userId;
+		const data 		= {
+		};
+		const method	= 'Get';
+		const spiner	= false;
+		const resp 		= await fetchData( url, data, method, spiner ); // spiner === false
+
+		return resp;
+	}
+
+	const [ chatMessageReceiverId, setChatMessageReceiverId ] = useState( '' );
+	
 	return (	
 	
 		<ChatContext.Provider 
@@ -150,10 +170,16 @@ export const ChatProvider = ({ children }) => {
 				saveMessage,
 				saveFile,
 				getMessages,
-				projectMessages,
 				deleteChatMessage,
 				deleteChatFile,
 				updateMessagesRead,
+				setProjectMessages,
+				projectMessages,
+				userUnreadMessages,
+				setUserUnreadMessages,
+				getUserUnreadMessages,
+				chatMessageReceiverId,
+				setChatMessageReceiverId
 			}}
 		>
 		
