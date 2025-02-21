@@ -43,8 +43,9 @@ export const ProjectProvider = ({ children }) => {
 		}
 	}
 
-	const base_api_url	= 'http://localhost/diamta/projects/public/index.php/api/'; 
-	// const base_api_url		= 'https://diamta.com/projects/public/index.php/api/'
+	// Backend url 
+	// const base_api_url	= 'http://localhost/diamta/projects/public/index.php/api/'; 	// dev
+	const base_api_url		= 'https://diamta.com/projects/public/index.php/api/'	// prod
 	
 	// get project categories
 	const getCategory = async () => {

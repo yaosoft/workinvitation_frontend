@@ -61,9 +61,10 @@ export const SiteProvider = ({ children }) => {
 		return site.referrer;
 	}
 	
-	// get site url
-	// const siteURL = 'https://diamta.com/projects/public/';
-	const siteURL = 'http://localhost/diamta/projects/public/';
+	// Backend url
+	// const siteURL = 'http://localhost/diamta/projects/public/'; // dev
+	const siteURL = 'https://diamta.com/projects/public/';	// prod
+	
 	
 	// contact to invite
 	const [ contact, setContact ] = useState( {} );
