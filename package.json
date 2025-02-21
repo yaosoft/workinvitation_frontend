@@ -1,0 +1,61 @@
+{
+  "name": "WorkInvitation",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "@tinymce/tinymce-react": "^5.1.1",
+    "antd": "^5.16.5",
+    "ckeditor5-premium-features": "^42.0.1",
+    "jquery": "^3.7.1",
+    "lightgallery": "^2.7.2",
+    "moment": "^2.30.1",
+    "react": "^18.2.0",
+    "react-accessible-accordion": "^5.0.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^5.0.1",
+    "react-image-gallery": "^1.3.0",
+    "react-moment": "^1.1.3",
+    "react-owl-carousel": "^2.3.3",
+    "react-paginate": "^8.2.0",
+    "react-range-slider-input": "^3.0.7",
+    "react-rater": "^6.0.5",
+    "react-responsive-modal": "^6.4.2",
+    "react-router-dom": "^6.22.3",
+    "react-router-hash-link": "^2.4.3",
+    "react-scripts": "5.0.1",
+    "react-search-autocomplete": "^8.5.2",
+    "react-slick": "^0.30.2",
+    "react-use-cart": "^1.13.0",
+    "slick-carousel": "^1.8.1",
+    "styled-components": "^6.1.8",
+    "tinymce": "^7.2.1",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
