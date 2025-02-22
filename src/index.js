@@ -7,7 +7,6 @@ import { AuthProvider } from "./context/AuthProvider";
 import { ProjectProvider } from "./context/Project";
 import { SiteProvider } from "./context/site";
 import { ChatProvider } from "./context/Chat";
-import { BrowserRouter } from 'react-router-dom'
 
 import Loader from './components/Loader';
 
