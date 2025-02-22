@@ -192,7 +192,7 @@ export const SiteProvider = ({ children }) => {
 	}
 
 	// websocket
-	const mySocket  = new WebSocket('ws://localhost:8081');
+	const mySocket  = new WebSocket('ws://64.188.10.87:8080');
 
 	return (
 
