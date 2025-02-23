@@ -192,7 +192,7 @@ export const SiteProvider = ({ children }) => {
 	}
 
 	// websocket
-	const mySocket  = new WebSocket('wss://64.188.10.87:8080');
+	const mySocket  = new WebSocket('https://workinvitation.com/websocket');
 
 	return (
 
