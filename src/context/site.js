@@ -192,7 +192,7 @@ export const SiteProvider = ({ children }) => {
 	}
 
 	// websocket
-	const mySocket  = new WebSocket('https://workinvitation.com/websocket');
+	const mySocket  = new WebSocket('http://workinvitation.com/websocket');
 
 	return (
 
