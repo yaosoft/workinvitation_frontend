@@ -192,7 +192,19 @@ export const SiteProvider = ({ children }) => {
 	}
 
 	// websocket
-	const mySocket  = new WebSocket('wss://www.workinvitation.com/websocket'); 
+// alert( window.navigator.onLine );
+	var mySocket  = ""; 
+	window.document.addEventListener( 'online', (e) => {
+		mySocket  = new WebSocket('wss://www.workinvitation.com/websocket'); 
+		alert( "You are online" );
+		console.log( "You are online" );
+	});
+
+	window.document.addEventListener( 'offline', (e) => {
+		alert( "You are not online" );
+		console.log( "You are offline" );
+		
+	});
 
 	return (
 
