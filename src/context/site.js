@@ -1,12 +1,14 @@
 import PropTypes from 'prop-types'
 import { createContext, useState, useEffect } from 'react'
-import { Space, Spin } from 'antd';
+import { Space, Spin, Button, notification, message, Popconfirm, Radio, Flex, DatePicker, Image, Upload } from 'antd';
 import {
 	RadiusBottomleftOutlined,
 	RadiusBottomrightOutlined,
 	RadiusUpleftOutlined,
 	RadiusUprightOutlined,
-	LoadingOutlined
+	LoadingOutlined,
+	InboxOutlined, 
+	QuestionCircleOutlined
 } from '@ant-design/icons';
 export const SiteContext = createContext();
 
@@ -21,6 +23,11 @@ export const SiteProvider = ({ children }) => {
 
 	// helper: Fetch data definition
 	async function fetchData( url, data, method ) {
+		if( !isOnline ){
+			message.error( 'No network!' );
+			return false;
+		}
+		
 		setSpiner( 'block' )
 		const response = await fetch( url, {
 			method: method, // *GET, POST, PUT, DELETE, etc.
@@ -192,19 +199,29 @@ export const SiteProvider = ({ children }) => {
 	}
 
 	// websocket
-// alert( window.navigator.onLine );
-	var mySocket  = ""; 
-	window.document.addEventListener( 'online', (e) => {
+// if (navigator.onLine) {
+  // alert('online');
+// } else {
+  // alert('offline');
+// }
+	var mySocket  = new WebSocket('wss://www.workinvitation.com/websocket');  
+	window.addEventListener( 'online', (e) => {
 		mySocket  = new WebSocket('wss://www.workinvitation.com/websocket'); 
-		alert( "You are online" );
+		message.info( "You are online" );
+		setIsOnline( true );
 		console.log( "You are online" );
 	});
 
-	window.document.addEventListener( 'offline', (e) => {
-		alert( "You are not online" );
+	window.addEventListener( 'offline', (e) => {
+		message.error( "You are not online" );
+		setIsOnline( false );
 		console.log( "You are offline" );
-		
-	});
+			
+	})
+
+	// Network state
+	const [ isOnline, setIsOnline ] = useState( navigator.onLine );
+
 
 	return (
 
@@ -233,7 +250,8 @@ export const SiteProvider = ({ children }) => {
 				getCurrentPassword,
 				passwordForgot,
 				passwordUpdate,
-				mySocket
+				mySocket,
+				isOnline
 			}}
 		>
 		

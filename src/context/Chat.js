@@ -1,15 +1,20 @@
 import PropTypes from 'prop-types'
-import { createContext, useState, useEffect } from 'react'
-import { Space, Spin } from 'antd';
+import { createContext, useState, useEffect, useContext } from 'react'
+
+import { Space, Spin, Button, notification, message, Popconfirm, Radio, Flex, DatePicker, Image, Upload } from 'antd';
 import {
 	RadiusBottomleftOutlined,
 	RadiusBottomrightOutlined,
 	RadiusUpleftOutlined,
 	RadiusUprightOutlined,
-	LoadingOutlined
+	LoadingOutlined,
+	InboxOutlined, 
+	QuestionCircleOutlined
 } from '@ant-design/icons';
-export const ChatContext = createContext();
 
+import { SiteContext } from './site';
+
+export const ChatContext = createContext();
 
 export const ChatProvider = ({ children }) => {
 
@@ -20,8 +25,15 @@ export const ChatProvider = ({ children }) => {
 	// spiner
 	const [ spiner, setSpiner ] = useState( 'none' );
 
+	const { isOnline }	= useContext( SiteContext );
+
 	// helper: Fetch data definition
 	async function fetchData( url, data, method, spiner ) {
+		if( !isOnline ){
+			message.error( 'No network!' );
+			return false;
+		}
+		
 		if( spiner )
 			setSpiner( 'block' )
 

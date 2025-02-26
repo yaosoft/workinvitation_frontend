@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
-import { createContext, useState, useEffect } from 'react'
-import { Space, Spin } from 'antd';
+import { createContext, useState, useEffect, useContext } from 'react'
+import { Space, Spin, Button, notification, message, Popconfirm, Radio, Flex, DatePicker, Image, Upload } from 'antd';
 import {
 	RadiusBottomleftOutlined,
 	RadiusBottomrightOutlined,
@@ -8,16 +8,25 @@ import {
 	RadiusUprightOutlined,
 	LoadingOutlined
 } from '@ant-design/icons';
+
+import { SiteContext } from './site';
+
 export const ProjectContext = createContext();
-
-
 export const ProjectProvider = ({ children }) => {
 
 	// spiner
 	const [ spiner, setSpiner ] = useState( 'none' );
 
+	const { isOnline }	= useContext( SiteContext );
+
 	// helper: Fetch data definition
 	async function fetchData( url, data, method ) {
+		
+		if( !isOnline ){
+message.error( 'No network!' );
+			return false;
+		}
+		
 		setSpiner( 'block' )
 		const response = await fetch( url, {
 			method: method, // *GET, POST, PUT, DELETE, etc.

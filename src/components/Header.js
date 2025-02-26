@@ -44,7 +44,6 @@ const Header = ( params ) => {
 		projectMessages, 
 		setProjectMessages,
 		currentIntervalId,
-		chatMessageReceiverId,
 	} = useContext( ChatContext );
 
 	// Message alert
@@ -119,6 +118,8 @@ console.log( 'Unable to get unreadMessages', unreadMessages );
 		// setInterval( getUnread, 15000 );
 		
 		// websoket message listener
+
+		
 		mySocket.onmessage = async function(e) {
 			const wssmsg = e.data;
 // alert( wssmsg );
