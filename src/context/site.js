@@ -219,10 +219,37 @@ export const SiteProvider = ({ children }) => {
 			
 	})
 
+	document.addEventListener( 'visibilitychange', function() {
+		if( document.hidden ){
+// alert( 'hidden' );			
+			setIsTabReactivated( false );
+			setIsTabActive( false )
+		}
+		else {
+			setIsTabReactivated( true );
+			setIsTabActive( true )
+			
+			updateFavicon( favicon );
+		}
+	});
+
 	// Network state
 	const [ isOnline, setIsOnline ] = useState( navigator.onLine );
 
+	// Tab state
+	const [ isTabReactivated, setIsTabReactivated ] = useState( false ); 
 
+	// Is tab active
+	const [ isTabActive, setIsTabActive ] = useState( true ); 
+
+	// Update favicon
+	const updateFavicon = ( iconLink ) => {
+		const linkElement = document.querySelector('link[rel=icon]');
+		linkElement.href = iconLink;
+	};
+	const faviconAlert = 'img/faviconAlert.png';
+	const favicon = 'img/favicon.png';
+	
 	return (
 
 		<SiteContext.Provider 
@@ -251,7 +278,11 @@ export const SiteProvider = ({ children }) => {
 				passwordForgot,
 				passwordUpdate,
 				mySocket,
-				isOnline
+				isOnline,
+				isTabReactivated,
+				isTabActive,
+				updateFavicon,
+				faviconAlert
 			}}
 		>
 		

@@ -31,9 +31,13 @@ const ChatBox = ( params ) => {
 
 	// 
 	const [ spinerDisplay, setSpinerDisplay ]	= useState( 'block' );
-	
-	const { siteURL, mySocket }	= useContext( SiteContext );
-	const { getUser }	= useContext( AuthContext );
+
+	const { 
+		siteURL, 
+		mySocket, 
+		isTabReactivated
+	}	= useContext( SiteContext );
+
 	const { 
 		saveMessage, 
 		saveFile, 
@@ -47,6 +51,8 @@ const ChatBox = ( params ) => {
 		getUserUnreadMessages,
 		setUserUnreadMessages,
 	} = useContext( ChatContext );
+
+	const { getUser }	= useContext( AuthContext );
 
 	// chat Message receiver ( interlocutor )
 
@@ -641,7 +647,7 @@ console.log( 'chatBox scrolled...' );
 	useEffect( () => {
 
 		// websoket message listener
-		mySocket.onmessage = async function(e) {
+		mySocket.onmessage = async function(e){
 			const wssmsg = e.data;
 // alert( wssmsg );
 			const senderId = wssmsg.split( '*' )[ 0 ];
@@ -649,7 +655,7 @@ console.log( 'chatBox scrolled...' );
 
 			if( receiverId == userId ){
 				
-				// alert( 'receiverId: ' + receiverId + ', ' + 'userId: ' + userId );
+// alert( 'receiverId: ' + receiverId + ', ' + 'userId: ' + userId );
 
 				// update new message count alert
 				// setUnreads()			
@@ -659,6 +665,8 @@ console.log( 'chatBox scrolled...' );
 
 			}
 		}
+
+
 
 		// Chatbox scroll listener
 		const getChatBox = async () => {
@@ -679,6 +687,21 @@ console.log( 'chatBox scrolled...' );
 			getChatBox();
 
 	}, [] );
+
+
+	// Chat settings
+	useEffect( () => {
+
+console.log( 'isTabReactivated: ' + isTabReactivated );
+		// Chatbox scroll listener
+		const getChatBox = async () => {
+			// load Messages
+			await loadMessages();
+		}
+		if( isTabReactivated )
+			getChatBox();
+
+	}, [ isTabReactivated ] );
 
 	// scroll to message
 	const scrollToMessage = async() => {
