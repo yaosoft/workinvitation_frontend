@@ -34,7 +34,13 @@ const Header = ( params ) => {
 	
 	const userId = getUser().userId;
 	
-	const { siteURL, mySocket }	= useContext( SiteContext );
+	const { 
+		siteURL, 
+		mySocket,
+		faviconAlert,
+		isTabActive,
+		updateFavicon
+	} = useContext( SiteContext );
 	
 	const { 
 		userUnreadMessages,
@@ -128,13 +134,18 @@ console.log( 'Unable to get unreadMessages', unreadMessages );
 
 			if( receiverId == userId ){
 
-				await getUnread();
+// alert( 'receiverId == userId' );
+// alert( '!isTabActive: ' + isTabActive );
+				if( !isTabActive ){
+// alert( '!isTabActive' );
+					updateFavicon( faviconAlert )
+				}
 
+				await getUnread();
 			}
 		}
 
-		
-	}, [] );
+	}, [isTabActive] );
 	
 
 	
