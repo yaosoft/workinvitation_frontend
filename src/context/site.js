@@ -227,9 +227,9 @@ export const SiteProvider = ({ children }) => {
 		}
 		else {
 			setIsTabReactivated( true );
-			setIsTabActive( true )
-			
-			updateFavicon( favicon );
+			setIsTabActive( true );
+			setTimeout( updateFavicon, 1000, favicon )
+			// updateFavicon( favicon );
 		}
 	});
 
@@ -249,6 +249,14 @@ export const SiteProvider = ({ children }) => {
 	};
 	const faviconAlert = 'img/faviconAlert.png';
 	const favicon = 'img/favicon.png';
+	
+	// Socket message
+	const socketMessageInfo = {
+		receiverId: '',
+		senderId: '',
+		message: '',
+	}
+	const [ socketMessage, setSocketMessage ] = useState( socketMessageInfo ); 
 	
 	return (
 
@@ -282,7 +290,9 @@ export const SiteProvider = ({ children }) => {
 				isTabReactivated,
 				isTabActive,
 				updateFavicon,
-				faviconAlert
+				faviconAlert,
+				socketMessage, 
+				setSocketMessage
 			}}
 		>
 		

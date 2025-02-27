@@ -35,7 +35,8 @@ const ChatBox = ( params ) => {
 	const { 
 		siteURL, 
 		mySocket, 
-		isTabReactivated
+		isTabReactivated,
+		socketMessage,
 	}	= useContext( SiteContext );
 
 	const { 
@@ -49,14 +50,14 @@ const ChatBox = ( params ) => {
 		setProjectMessages,
 		projectMessages,
 		getUserUnreadMessages,
-		setUserUnreadMessages,
+		setUserUnreadMessages
 	} = useContext( ChatContext );
 
 	const { getUser }	= useContext( AuthContext );
 
 	// chat Message receiver ( interlocutor )
 
-	const [ chatMessageReceiverId, setChatMessageReceiverId ] 			= useState( params.params.messageReceiverId );
+	const [ chatMessageReceiverId, setChatMessageReceiverId ] = useState( params.params.messageReceiverId );
 	// project
 	const [ searchParams, setSearchParams ] = useSearchParams();
 	const [ projectId, setProjectId ] 		= useState( params.params.project.id );
@@ -315,7 +316,7 @@ console.log( 'No message found' );
 			setChatMessages( messages ); 
 
 			// chatboxScrollingListener( thechatBox, messages );// To do: settimeout
-			setTimeout( chatboxScrollingListener, 2000, thechatBox, messages ) 
+			setTimeout( chatboxScrollingListener, 2000, thechatBox, messages );
 
 			// check new opened message
 			await setViewed( thechatBox, messages );
@@ -643,51 +644,27 @@ console.log( 'chatBox scrolled...' );
 	// websoket send a message
 	// sendWsMessage();
 	
-	// Chat settings
+	// Chatbox settings
 	useEffect( () => {
-
-		// websoket message listener
-		mySocket.onmessage = async function(e){
-			const wssmsg = e.data;
-// alert( wssmsg );
-			const senderId = wssmsg.split( '*' )[ 0 ];
-			const receiverId = wssmsg.split( '*' )[ 1 ];
-
-			if( receiverId == userId ){
-				
-// alert( 'receiverId: ' + receiverId + ', ' + 'userId: ' + userId );
-
-				// update new message count alert
-				// setUnreads()			
-				
-				// reload the user's messages
-				await loadMessages();
-
-			}
-		}
-
-
-
 		// Chatbox scroll listener
 		const getChatBox = async () => {
 			const thechatBox = await window.document.getElementById( "msgerChatbox" );
-
-			// if( !thechatBox ){
-				// alert( 'No chatbox' );
-				// return
-			// }
-
 			setChatbox( thechatBox );	// set chatbox
-
-			// load Messages
 			await loadMessages();
-
 		}
 		if( !chatBox )
 			getChatBox();
-
 	}, [] );
 
+	// Socket message
+	useEffect( () => {
+		// 
+		const getSocketMessage = async () => {
+			await loadMessages();
+		}
+		getSocketMessage() 
+
+	}, [socketMessage] );
 
 	// Chat settings
 	useEffect( () => {
