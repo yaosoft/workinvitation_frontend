@@ -39,7 +39,9 @@ const Header = ( params ) => {
 		mySocket,
 		faviconAlert,
 		isTabActive,
-		updateFavicon
+		updateFavicon,
+		socketMessage, 
+		setSocketMessage
 	} = useContext( SiteContext );
 	
 	const { 
@@ -128,17 +130,21 @@ console.log( 'Unable to get unreadMessages', unreadMessages );
 		
 		mySocket.onmessage = async function(e) {
 			const wssmsg = e.data;
-// alert( wssmsg );
 			const senderId = wssmsg.split( '*' )[ 0 ];
 			const receiverId = wssmsg.split( '*' )[ 1 ];
 
 			if( receiverId == userId ){
+				const socketMessageInfo = {
+					receiverId: receiverId,
+					senderId: senderId,
+					message: wssmsg,
+				}
+				setSocketMessage( socketMessageInfo );
 
-// alert( 'receiverId == userId' );
-// alert( '!isTabActive: ' + isTabActive );
 				if( !isTabActive ){
 // alert( '!isTabActive' );
-					updateFavicon( faviconAlert )
+					setTimeout( updateFavicon, 1000, faviconAlert )
+					// updateFavicon( faviconAlert );
 				}
 
 				await getUnread();
