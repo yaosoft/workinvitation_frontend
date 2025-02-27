@@ -36,6 +36,7 @@ const ChatBox = ( params ) => {
 		siteURL, 
 		mySocket, 
 		isTabReactivated,
+		isTabActive,
 		socketMessage,
 	}	= useContext( SiteContext );
 
@@ -712,6 +713,11 @@ console.log( 'messageToScrollElt', messageToScrollElt )
 	// check / persist the user's messages viewed on the chatbox visible area
 	const setViewed = async ( chatBox, messages ) => {
 // alert( 'setViewed' );
+
+		// check if the browsertab is hiden
+		if( !isTabActive )
+			return
+
 		var newReadMessageIds = '';
 		// chatbox position
 		// const chatBox 		= await window.document.getElementById( "msgerChatbox" );
