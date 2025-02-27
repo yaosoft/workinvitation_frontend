@@ -41,7 +41,9 @@ const Header = ( params ) => {
 		isTabActive,
 		updateFavicon,
 		socketMessage, 
-		setSocketMessage
+		setSocketMessage,
+		setIsTabReactivated,
+		setIsTabActive
 	} = useContext( SiteContext );
 	
 	const { 
@@ -140,17 +142,15 @@ console.log( 'Unable to get unreadMessages', unreadMessages );
 					message: wssmsg,
 				}
 				setSocketMessage( socketMessageInfo );
-
-				if( !isTabActive ){
-// alert( '!isTabActive' );
+console.log( '--- isTabActive: ' + isTabActive );
+				if( document.hidden )
 					setTimeout( updateFavicon, 1000, faviconAlert )
-					// updateFavicon( faviconAlert );
-				}
+				
 
 				await getUnread();
 			}
 		}
-
+		
 	}, [isTabActive] );
 	
 
