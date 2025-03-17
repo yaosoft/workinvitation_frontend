@@ -2,3 +2,44 @@ verify duplicates when extracting contacts from file
 not allow sending a project to your self
 not allowing opeing a project from url that is not your
 when resending invitation, dont allow multiple hits on the sending button
+
+
+Favicon
+Set the favicon
+
+On first usage
+Understand the redirection to /login
+
+Header
+New message: multiple clicks to open the chatbox
+1 new messages
+Some time 1 New message but no message, blanc actually
+
+Autoscrolling
+Reply to a mesage:
+Multiple click to send
+All next messages sent are in reply mode after a reply
+All autoscrolling issue
+
+Chatroom
+Last message is not okay
+
+After click on send button
+Do not scrool
+
+Get mesages on scroll
+Not working all the time
+
+getMessages
+When getMessages fails, stop animation
+
+Reception d'un message
+Suprimer l'animation
+
+Message emil alert
+Use Workinvitation logo
+Update the text content
+
+Revoke a worker
+
+Load more chhat messages

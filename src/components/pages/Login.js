@@ -12,6 +12,8 @@ import {
 import { AuthContext } from "../../context/AuthProvider";
 import { SiteContext } from "../../context/site";
 
+import HeaderHome from '../HeaderHome';
+import Footer from '../Footer';
 const Login = ( params ) => {
 	// context
 	const { logIn, setUser }	= useContext( AuthContext );
@@ -103,7 +105,7 @@ const Login = ( params ) => {
 		logIn( user );	
 		
 		// goto validation
-		const path	= getReferrer() ? getReferrer() : '/project/received';
+		const path	= getReferrer() ? getReferrer() : '/project/home';
 
 		navigate( path );
 	}
@@ -137,8 +139,7 @@ const Login = ( params ) => {
 	
 	return (
 		<>
-		<p>&nbsp;</p>
-		<p>&nbsp;</p>
+		<HeaderHome />
 			<div class="login-form-bg h-100">
 				<div class="container h-100">
 					<div class="row justify-content-center h-100">
@@ -198,6 +199,8 @@ const Login = ( params ) => {
 					</div>
 				</div>
 			</div>
+			<div>&nbsp;</div>
+			<Footer />
 		</>
 	);
 };

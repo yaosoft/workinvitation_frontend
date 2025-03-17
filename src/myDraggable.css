@@ -1,0 +1,9 @@
+.myDraggable > span > div {
+  width: 400px !important;
+  height: 80px !important;
+  min-width: auto !important;
+}
+
+.myDraggable > span > div > span > div > p {
+  width: 70% !important;;
+}

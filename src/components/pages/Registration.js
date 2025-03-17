@@ -11,6 +11,9 @@ import {
 	LoadingOutlined
 } from '@ant-design/icons';
 
+import HeaderHome from '../HeaderHome';
+import Footer from '../Footer';
+
 const Registration = ( params ) => {
 	const searchParams = new URLSearchParams( window.location.search );
 	const [ userEmail, setUserEmail ] 	= useState( searchParams.get( 'email' ) );
@@ -150,8 +153,7 @@ const Registration = ( params ) => {
 
 	return (
 		<>
-			<p>&nbsp;</p>
-			<p>&nbsp;</p>
+			<HeaderHome />
 			<div class="login-form-bg h-100">
 				<div class="container h-100">
 					<div class="row justify-content-center h-100">
@@ -205,6 +207,8 @@ const Registration = ( params ) => {
 					</div>
 				</div>
 			</div>
+			<div>&nbsp;</div>
+			<Footer />
 		</>
 	);
 };

@@ -153,7 +153,6 @@ const ChatBox = ( params ) => {
 
 	// File uploader
 	const { Dragger } = Upload;
-	const [ uploading, setUploading ] = useState(false);
 	const [ fileList, setFileList ] = useState([]);
 	const props = {
 		listType: 'picture',

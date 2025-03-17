@@ -17,18 +17,20 @@ export const SiteProvider = ({ children }) => {
 
 	const base_api_url	= 'http://localhost/diamta/projects/public/index.php/api/'; 
 	// const base_api_url		= 'https://diamta.com/projects/public/index.php/api/'
-	
+
 	// spiner
 	const [ spiner, setSpiner ] = useState( 'none' );
 
 	// helper: Fetch data definition
-	async function fetchData( url, data, method ) {
+	async function fetchData( url, data, method, spiner ) {
 		if( !isOnline ){
 			message.error( 'No network!' );
 			return false;
 		}
 		
-		setSpiner( 'block' )
+		if( spiner )
+			setSpiner( 'block' )
+
 		const response = await fetch( url, {
 			method: method, // *GET, POST, PUT, DELETE, etc.
 			// mode: "no-cors", // no-cors, *cors, same-origin
@@ -69,8 +71,8 @@ export const SiteProvider = ({ children }) => {
 	}
 	
 	// Backend url
-	// const siteURL = 'http://localhost/diamta/projects/public/'; // dev
-	const siteURL = 'https://diamta.com/projects/public/';	// prod
+	const siteURL = 'http://localhost/diamta/projects/public/'; // dev
+	// const siteURL = 'https://diamta.com/projects/public/';	// prod
 	
 	
 	// contact to invite
@@ -153,13 +155,52 @@ export const SiteProvider = ({ children }) => {
 	}
 
 	// save user profile
-	const userProfileSave = async ( data ) => {
+	const userProfileSave = async ( dataObj, picture ) => {
 		const url 		= base_api_url +  'profile/save';
 		const method 	= 'POST';
-		const resp 		= await fetchData( url, data, method );
+		// const resp 		= await fetchData( url, data, method );
+
+		const formData = new FormData();
+		
+		// Append file
+		formData.append('files[]', picture.originFileObj)
+
+		// Append data
+		for ( var key in dataObj ) 
+			formData.append( key, dataObj[key] );
+
+		// You can use any AJAX library you like
+		const resp = await fetch( url, {
+			method: 'POST',
+			body: formData,
+		})
 
 		return resp;
 	}
+
+	const postProject = async ( dataObj, fileList ) => {
+		const formData = new FormData();
+		// Append files
+		fileList.forEach( ( file ) => {
+			formData.append('files[]', file.originFileObj)
+		});
+
+		// Append data
+		for ( var key in dataObj ) 
+			formData.append(key, dataObj[key]);
+
+// for (var key of formData.entries()) {
+	// console.log( 'key0 --> ' + key[0] + ', key1 --> ' + key[1]);
+// }
+		// You can use any AJAX library you like
+		const resp = await fetch( base_api_url +  'project/save', {
+			method: 'POST',
+			body: formData,
+		})
+		
+		
+		return resp.json();
+	};
 
 	// save user password
 	const passwordSave = async ( data ) => {
@@ -197,6 +238,16 @@ export const SiteProvider = ({ children }) => {
 		const resp 		= await fetchData( url, data, method );
 		return resp;
 	}
+	// password update
+	const passwordCheck =  async ( userId, password ) => {
+
+		const url 		= base_api_url + 'password/check/?userId=' + userId + '&password=' + password;
+		const method 	= 'GET';
+		const data 		= {};
+		const spiner	= false;
+		const resp 		= await fetchData( url, data, method, spiner );
+		return resp;
+	}	
 
 	// websocket
 // if (navigator.onLine) {
@@ -250,6 +301,17 @@ export const SiteProvider = ({ children }) => {
 	const faviconAlert = 'img/faviconAlert.png';
 	const favicon = 'img/favicon.png';
 	
+	//
+	const getOccupations = async () => {
+		const url 		= base_api_url + 'profile/occupations/get';
+		const method 	= 'GET';
+		const data 		= {};
+		const resp 		= await fetchData( url, data, method );
+
+		return resp;
+	}
+	
+	
 	// Socket message
 	const socketMessageInfo = {
 		receiverId: '',
@@ -292,7 +354,9 @@ export const SiteProvider = ({ children }) => {
 				updateFavicon,
 				faviconAlert,
 				socketMessage, 
-				setSocketMessage
+				setSocketMessage,
+				getOccupations,
+				passwordCheck
 			}}
 		>
 		
