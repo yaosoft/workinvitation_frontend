@@ -7,9 +7,9 @@ const Sidebar = ( params ) => {
 // console.log( params );
 	return (
 		<>
-		<div className="nav-header" style={{ backgroundColor: '#df6615', height: '100%' }} >
+		<div className="nav-header" style={{ backgroundColor: '#F28432', height: '100%' }} >
 					<div className="brand-logo">
-						<Link to="/accueil">
+						<Link to="/home">
 							<b className="logo-abbr"><img src="./img/logo.png" alt="" /> </b>
 							<span className="logo-compact"><img src="./img/logo10.png" alt="" /></span>
 							<span className="brand-title">
@@ -21,7 +21,7 @@ const Sidebar = ( params ) => {
 				<div className="nk-sidebar">           
 					<div className="nk-nav-scroll">
 						<ul className="metismenu" id="menu">
-							<li className="nav-label"><span style={{ color: '#8072c9' }}>Project Management</span></li>
+							<li className="nav-label"><span style={{ color: '#8072c9' }}>&nbsp;</span></li>
 							<li>
 								<a className="has-arrow" aria-expanded="false">
 									<i className="icon-note menu-icon"></i> <span className="nav-text">Projects</span>

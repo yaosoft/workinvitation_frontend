@@ -18,6 +18,7 @@ const SecuredPagesAuth = () => {
 	
 	// secured pages list
 	const securedPagesPath 	= [
+		'/project/home',
 		'/project/edit',
 		'/project/sent',
 		'/project/view',
@@ -25,12 +26,13 @@ const SecuredPagesAuth = () => {
 		'/contacts-list/create',
 		'/contacts-list/list',
 		'/profile/edit',
-		'profile/password/change',
+		'/profile/password/change',
 	]
 	
 	// pages to not referrer
 	const notToReferPages = [
-		'/login'
+		'/registration',
+		'/login',
 	]
 	
 	// register current page

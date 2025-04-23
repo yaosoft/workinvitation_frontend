@@ -11,6 +11,9 @@ import {
 	LoadingOutlined
 } from '@ant-design/icons';
 
+import HeaderHome from '../HeaderHome';
+import Footer from '../Footer';
+
 const Registration = ( params ) => {
 	const searchParams = new URLSearchParams( window.location.search );
 	const [ userEmail, setUserEmail ] 	= useState( searchParams.get( 'email' ) );
@@ -86,17 +89,17 @@ const Registration = ( params ) => {
 			setSubscribeSpin( 'none' );
 			return
 		}
-		
+
 		// Post
-		// const base_api_url	= 'http://localhost/diamta/projects/public/index.php/api/'; 
-		const base_api_url		= 'https://diamta.com/projects/public/index.php/api/'
+		const base_api_url	= 'http://localhost/diamta/projects/public/index.php/api/'; 
+		// const base_api_url		= 'https://diamta.com/projects/public/index.php/api/'
 		const signupApiURL 		= base_api_url + 'user/registration';
 		const method = 'POST';
 		const subscribeData = {
 			password: 	subscribePassword,
 			email: 		subscribeEmail
 		};
-		
+
 		const userId = await postData( signupApiURL, subscribeData, method );
 		if( !userId ){
 			setSubscribeSpin( 'none' );
@@ -105,12 +108,9 @@ const Registration = ( params ) => {
 			return
 		}
 
-// alert( userId );
-
-		// update user id for entity projectUserStatus 
 		if( userEmail ){
 			const resp = await updateUserProjectStatus( userId, userEmail );
-// alert( resp );
+
 			if( !resp ){
 				alert( 'error' );
 			}
@@ -118,40 +118,23 @@ const Registration = ( params ) => {
 
 		// goto validation
 		const validationPath	= '/login';
-					
+		
 		navigate( validationPath );
 	}
 
 	// build email input
 	const BuildEmailInput = () =>{
 
-		if( !userEmail ){
-			return(
-				<input 
-					onChange 	= {handleChangeSubscribeEmail}
-					value 		= {subscribeEmail}
-					className	= "form-control" 
-					type		= "email" 
-					placeholder = "Email" 
-				/>
-			)
-		}
-		else{
-			setSubscribeEmail( userEmail );
-			return(
-				<>{userEmail}</>
-			)
-		}
+		
 	}
 
 	useEffect(() => {
-		setSubscribeSpin( 'none' );
+		setSubscribeEmail( userEmail );
 	}, []);
 
 	return (
 		<>
-			<p>&nbsp;</p>
-			<p>&nbsp;</p>
+			<HeaderHome />
 			<div class="login-form-bg h-100">
 				<div class="container h-100">
 					<div class="row justify-content-center h-100">
@@ -162,7 +145,21 @@ const Registration = ( params ) => {
 										<h4 class="text-center">Registration</h4>
 										<form class="mt-5 mb-5 login-input">
 											<div class="form-group">
-												<BuildEmailInput />
+												{ userEmail === null ?
+													<input 
+														onChange 	= {handleChangeSubscribeEmail}
+														value 		= {subscribeEmail}
+														className	= "form-control" 
+														type		= "email" 
+														placeholder = "Email" 
+													/>
+												:
+													<input
+														value 		= {userEmail}
+														className	= "form-control" 
+														disabled	= "disabled"
+													/>
+												}
 											</div>
 											<div class="form-group">
 												<input 
@@ -205,6 +202,8 @@ const Registration = ( params ) => {
 					</div>
 				</div>
 			</div>
+			<div>&nbsp;</div>
+			<Footer />
 		</>
 	);
 };

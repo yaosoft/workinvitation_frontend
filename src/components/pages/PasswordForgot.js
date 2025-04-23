@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, Link, useLocation  } from 'react-router-dom';
-import Header from '../Header';
+import HeaderHome from '../HeaderHome';
 import Footer from '../Footer';
 import Sidebar from '../Sidebar';
 import { Modal } from 'react-responsive-modal';
@@ -26,10 +26,12 @@ import ModalPasswordForgot from '../ModalPasswordForgot';
 const PasswordForgot = ( params ) => {
 
 	const { passwordForgot } = useContext( SiteContext );
-
+	const [ loginSpin, setLoginSpin ] = useState( 'none' );
+	
 	// 
 	const [ email, setEmail ] = useState( '' );
 	const handleChangeEmail = ( e ) => {
+
 		const data = e.target.value;
 		setEmail( data );
 	}
@@ -41,20 +43,22 @@ const PasswordForgot = ( params ) => {
 	const [ code, setCode ] = useState( Math.floor(Math.random()*90000) + 10000 );
 
 	//
-	const handleClickBtnSave = async() => {
-		
+	const handleClickBtnSave = async( e ) => {
+		e.preventDefault();
 		// validation registration password
 		if( !email ){
 			message.error( 'Type your email please.' );
 			// setSubscribeSpin( 'none' );
 			return
 		}
-		
+
 		const data = {
 			email:	email,
 			code: code
 		}
-
+		
+		// spin
+		setLoginSpin( 'block' );
 		const rep = await passwordForgot( data );
 		if( !rep ){
 			message.error( 'email not found' );
@@ -64,6 +68,7 @@ const PasswordForgot = ( params ) => {
 			setOpenModalPasswordForgot( true )
 			setUserId( rep );
 		}		
+		setLoginSpin( 'none' );
 	}
 
 	// Password forgot modals
@@ -78,7 +83,7 @@ const PasswordForgot = ( params ) => {
 
 
 	return (
-		<>
+	<>
 		<Modal open={ openModalPasswordForgot } onClose={ onCloseModalPasswordForgot } center>
 			<ModalPasswordForgot params =
 				{{
@@ -87,61 +92,57 @@ const PasswordForgot = ( params ) => {
 				}}
 			/>
 		</Modal>
-		
-				<Header />
-				<Sidebar />	
-
-				<div className="content-body">
-
-            <div className="container-fluid mt-3">
-                <div className="row">
-                   <h3>Change your Password</h3> 
-                </div>
-				<div className="row">
-					<div className="form-group">
-						&nbsp;
-					</div>
-                </div>
-				<div className="row">
-					<div className="card">
-                       <div className="card-body">
-							Enter your email and we will send you a code to reset your password.
-					   </div>
-					</div>
-				</div>
-				<div className="row">
-					<div className="card">
-                       <div className="card-body">
-							<input 
-								type		= "email" 
-								className	= "form-control bg-transparent" 
-								placeholder	= "Your Email"
-								value		= { email }
-								onChange	= { e => handleChangeEmail( e ) }
-							/>
-							<p>&nbsp;</p>
-							<p>&nbsp;</p>
-							<Button
-								className	= "btn btn-success"
-								onClick		= { e => handleClickBtnSave( e ) }
-							>
-								Send
-							</Button>
-									
+		<HeaderHome />
+			<div class="login-form-bg h-100">
+				<div class="container h-100">
+					<div class="row justify-content-center h-100">
+						<div class="col-xl-6">
+							<div class="form-input-content">
+								<div class="card login-form mb-0">
+									<div class="card-body pt-5">
+										<h4 class="text-center">Password forgot</h4>
+										<span>Type your email you will receive a code to reset your password.</span>
+										<form class="mt-5 mb-5 login-input">
+											<div class="form-group">
+												<input 
+													type		= "email" 
+													className	= "form-control" 
+													placeholder	= "Your Email"
+													value		= { email }
+													onChange	= { e => handleChangeEmail( e ) }
+												/>
+											</div>
+											<button 
+												class	= "btn login-form__btn submit w-100"
+												onClick	= { e => handleClickBtnSave( e ) }
+											>
+												<Space>
+													<Spin
+														indicator={
+															<LoadingOutlined
+																style={{
+																	fontSize: 		20,
+																	marginRight: 	'10px',
+																	display:		loginSpin,
+																	color: 			'wheat',
+																}}
+																spin
+															/>
+														}
+													/>
+												</Space>
+												Send
+											</button>
+										</form>
+										<p class="mt-5 login-form__footer">Dont have account? <Link to="/registration" class="text-primary">Sign Up</Link> now</p>
+									</div>
+								</div>
 							</div>
-						</div> 
+						</div>
 					</div>
 				</div>
-				<p>&nbsp;</p>
-				<p>&nbsp;</p>
-				<p>&nbsp;</p>
-				<p>&nbsp;</p>
-				<p>&nbsp;</p>
-				<p>&nbsp;</p>
-				<p>&nbsp;</p>
-				<p>&nbsp;</p>
 			</div>
-			
+			<div>&nbsp;</div>
 			<Footer />
 		</>
 	);

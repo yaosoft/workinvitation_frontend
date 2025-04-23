@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 
-import Index from './pages/Index';
+import Home from './pages/Home';
 import ListProjects from './pages/ListProjects.js';
 import ProjectEdit from './pages/ProjectEdit';
 import Project from './pages/Project';
+import ProjectHome from './pages/ProjectHome';
 import ProjectInvitations from './pages/ProjectInvitations';
 import Login from './pages/Login';
 import Registration from './pages/Registration';
@@ -14,6 +15,7 @@ import Profile from './pages/Profile';
 import ProfilePasswordEdit from './pages/ProfilePasswordEdit';
 import PasswordForgot from './pages/PasswordForgot';
 import PasswordForgotUpdate from './pages/PasswordForgotUpdate';
+import Privacy from './pages/Privacy';
 
 const AllRoutes = {
 
@@ -46,6 +48,10 @@ const AllRoutes = {
 				}}
 			/>,
 			path: 'contacts-list/edit/*',
+		},
+		{	// Projects | Home
+			element:  <ProjectHome />,
+			path: 'project/home',
 		},
 		{	// Projects | Received projects
 			element:  <ListProjects 
@@ -86,12 +92,12 @@ const AllRoutes = {
 			element:  <ProjectEdit />,
 			path: 'project/edit/*',
 		},
-		{	// Accueil
-			element:  <Index />,
-			path: 'accueil',
+		{	// Home
+			element:  <Home />,
+			path: 'home',
 		},
-		{	// Accueil
-			element:  <Index />,
+		{	// Home
+			element:  <Home />,
 			path: '',
 		},
 		{	// Login
@@ -121,6 +127,10 @@ const AllRoutes = {
 		{	// Not found page
 			element: <NotFoundPage />,
 			path: '/*',
+		},
+		{	// Privacy page
+			element: <Privacy />,
+			path: '/privacy',
 		},
 	],
 }

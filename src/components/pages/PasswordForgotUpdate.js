@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
-import Header from '../Header';
+import HeaderHome from '../HeaderHome';
 import Footer from '../Footer';
 import Sidebar from '../Sidebar';
 import { Modal } from 'react-responsive-modal';
@@ -78,9 +78,7 @@ const PasswordForgotUpdate = ( params ) => {
 
 	return (
 		<>
-		
-				<Header />
-				<Sidebar />	
+		<HeaderHome />
 
 				<div className="content-body">
 

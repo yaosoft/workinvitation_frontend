@@ -65,13 +65,8 @@ const ProjectEdit = ( params ) => {
 	// Select a Project Category
 	const { getCategory, postProject } = useContext( ProjectContext );
 	const [ categories, setCategories ]  = useState( [] ); 
-	const [ categoryExpanded, setCategoryExpanded ] = useState( false );
-	const [ CategoryDefault, setCategoryDefault ] = useState( 'Select a Category' );
+	const [ categoryDefault, setCategoryDefault ] = useState( 'Select a Category' );
 	const [ categorySelected, setCategorySelected ] = useState( '' );
-	const handleClickCategoryExpanded = ( event ) => {
-		
-		setCategoryExpanded( !categoryExpanded );
-	}
 	const handleChangeCategorySelected = ( value ) => {
 		// const categoryLabel = categories.filter( e => e.id == value )[ 0 ].title;
 		setCategorySelected( value );
@@ -216,7 +211,7 @@ const ProjectEdit = ( params ) => {
 			info.file.status = 'success';
 			let newFileList = [...info.fileList];
 			setFileList( newFileList );
-			console.log(info.file, info.fileList);
+//	console.log(info.file, info.fileList);
 
 			// if (status == 'success') {
 				// let newFileList = [...info.fileList];
@@ -252,7 +247,7 @@ const ProjectEdit = ( params ) => {
 		const postData = {}; 
 		
 		// Category 
-		if( type == 'saveSend' && ( !categorySelected || categorySelected == CategoryDefault ) ){
+		if( type == 'saveSend' && ( !categorySelected || categorySelected == categoryDefault ) ){
 			message.error( 'Select a category' );
 			return;
 		}
@@ -424,7 +419,7 @@ const ProjectEdit = ( params ) => {
 				// description
 				setDescriptionValue( data.description );
 
-				// ptoject type
+				// project type
 				setTypeSelectedDefault( data.projectTypeTitle );
 				setTypeSelected( data.projectTypeId );
 				
@@ -520,7 +515,7 @@ const ProjectEdit = ( params ) => {
 												<div className="btn-group show" role="group">
 														<Select
 																size 		 	= 'middle'
-																defaultValue	= { CategoryDefault }
+																defaultValue	= { categoryDefault }
 																value			= { categorySelected }
 																onChange		= { handleChangeCategorySelected }
 																style={{

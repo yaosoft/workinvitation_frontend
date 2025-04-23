@@ -31,8 +31,16 @@ const Header = ( params ) => {
 
 	const { isAuthenticated, logOut, getUser, setUser } = useContext( AuthContext );
 	const navigate = useNavigate();
+
+	const checkAuth = async () => {
+		if( !isAuthenticated() ){
+			navigate( '/login' );
+			return false
+		}
+	}
+	checkAuth();
 	
-	const userId = getUser().userId;
+	const [ userId, setUserId ] = useState( '' );
 	
 	const { 
 		siteURL, 
@@ -112,7 +120,11 @@ const Header = ( params ) => {
 	const [ totalUnread, setTotalUnread ] = useState( 0 );
 	useEffect( () => {
 		// 
+
 		const getUnread = async () =>{
+			const userId = await getUser().userId;
+			setUserId( userId );
+
 			const unreadMessages = await getUserUnreadMessages( userId );
 // console.log( 'unreadMessages', unreadMessages );
 			if( unreadMessages ){

@@ -18,9 +18,7 @@ root.render(
 			<SiteProvider>
 			<ProjectProvider>
 			<ChatProvider>
-				<Loader />
-
-				<div id="main-wrapper">
+				<div>
 					<App />
 				</div>
 			</ChatProvider>
