@@ -81,7 +81,10 @@ const RegistrationEmailExist = ( params ) => {
 		}
 		
 		// Post
-		const signupApiURL = 'http://localhost/diamta/projects/public/index.php/api/user/registration';
+		const base_api_url	= 'https://backend.workinvitation.com/api/'
+		const signupApiURL = base_api_url + 'user/registration';
+
+
 		const method = 'POST';
 		const subscribeData = {
 			password: 	subscribePassword,
