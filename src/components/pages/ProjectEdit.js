@@ -419,7 +419,7 @@ const ProjectEdit = ( params ) => {
 				// description
 				setDescriptionValue( data.description );
 
-				// ptoject type
+				// project type
 				setTypeSelectedDefault( data.projectTypeTitle );
 				setTypeSelected( data.projectTypeId );
 				
