@@ -21,7 +21,7 @@ export const ChatProvider = ({ children }) => {
 	// Backend url
 	// const base_api_url	= 'http://localhost/diamta/projects/public/index.php/api/'; // dev 
 	// const base_api_url = 'https://diamta.com/projects/public/index.php/api/'		// prod
-	const base_api_url	= 'https://backend.workinvitation.com/index.php/api/'
+	const base_api_url	= 'https://backend.workinvitation.com/api/'
 
 	// spiner
 	const [ spiner, setSpiner ] = useState( 'none' );

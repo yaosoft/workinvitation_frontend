@@ -73,7 +73,7 @@ const Login = ( params ) => {
 		// Post
 		// const base_api_url	= 'http://localhost/diamta/projects/public/index.php/api/'; 
 		// const base_api_url		= 'https://diamta.com/projects/public/index.php/api/'
-		const base_api_url	= 'https://backend.workinvitation.com/index.php/api/'
+		const base_api_url	= 'https://backend.workinvitation.com/api/'
 
 		const loginApiURL = base_api_url + 'user/login';
 		const method 	= 'POST';

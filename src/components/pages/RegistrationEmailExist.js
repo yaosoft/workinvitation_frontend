@@ -83,7 +83,7 @@ const RegistrationEmailExist = ( params ) => {
 		// Post
 		// const base_api_url	= 'http://localhost/diamta/projects/public/index.php/api/'; 
 		// const base_api_url		= 'https://diamta.com/projects/public/index.php/api/'
-		const base_api_url	= 'https://backend.workinvitation.com/index.php/api/'
+		const base_api_url	= 'https://backend.workinvitation.com/api/'
 		const signupApiURL = base_api_url + 'user/registration';
 
 
