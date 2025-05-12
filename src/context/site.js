@@ -18,6 +18,10 @@ export const SiteProvider = ({ children }) => {
 	// const base_api_url	= 'http://localhost/diamta/projects/public/index.php/api/'; 
 	// const base_api_url	= 'https://diamta.com/projects/public/index.php/api/'
 	const base_api_url	= 'https://backend.workinvitation.com/api/'
+	
+	// Backend url
+	// const siteURL = 'http://localhost/diamta/projects/public/'; // dev
+	const siteURL = 'https://diamta.com/projects/public/';	// prod
 
 	// spiner
 	const [ spiner, setSpiner ] = useState( 'none' );
@@ -70,12 +74,7 @@ export const SiteProvider = ({ children }) => {
 
 		return site.referrer;
 	}
-	
-	// Backend url
-	const siteURL = 'http://localhost/diamta/projects/public/'; // dev
-	// const siteURL = 'https://diamta.com/projects/public/';	// prod
-	
-	
+
 	// contact to invite
 	const [ contact, setContact ] = useState( {} );
 
