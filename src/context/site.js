@@ -22,7 +22,7 @@ export const SiteProvider = ({ children }) => {
 	// Backend url
 	// const siteURL = 'http://localhost/diamta/projects/public/'; // dev
 	// const siteURL = 'https://diamta.com/projects/public/';	// prod
-	const siteURL = 'https://workinvitation.com/projects/public/';	// prod
+	const siteURL = 'https://workinvitation.com/public/';	// prod
 
 	// spiner
 	const [ spiner, setSpiner ] = useState( 'none' );
