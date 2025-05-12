@@ -28,16 +28,6 @@ const Header = ( params ) => {
 														|
 													</Link>
 												</li>
-												<li class="d-inline-block mr-3">
-													<Link to='/project/home' style={{ color: '#fff' }} >
-														Projects and workers
-													</Link>
-												</li>
-												<li class="d-inline-block mr-3" >
-													<Link style={{ color: '#fff' }} >
-														|
-													</Link>
-												</li>
                                                 <li class="d-inline-block mr-3">
 													<Link to='/login' style={{ color: '#fff' }} >
 														Login

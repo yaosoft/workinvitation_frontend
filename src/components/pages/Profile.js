@@ -51,6 +51,7 @@ const Profile = ( params ) => {
 	const { userProfileGet, userProfileSave, siteURL }	= useContext( SiteContext );
 	const [ userProfile, setUserProfile ] = useState( {} );
 	
+	const profilePicSizeLimit = 2000000; // 2mb
 	const [ pictureError, setPictureError ] = useState( '' );
 	const [ openPictureConfirmBox, setOpenPictureConfirmBox ] = useState( false );
 	// const [ checkEmptyPicture, setCheckEmptyPicture ] = useState( false );
@@ -157,22 +158,26 @@ console.log( 'I don\'t want a profile\'s picture' );
 	const [ countryDefault, setCountryDefault ] = useState( 'Select a country' );
 	const [ countrySelected, setCountrySelected ] = useState( '' );
 	const [ countries, setCountries ]  = useState( [] ); 
-	const [ countryCode, setCountryCode ] = useState( '' );
+	const [ countryCode, setCountryCode ] = useState( '' );	
+	const [ flagCode, setFlagCode ] = useState( '' );
 	const [ countryPhoneCode, setCountryPhoneCode ] = useState( '' );
+
 	const handleChangeCountrySelected = ( countryCode ) => {
 		setCountrySelected( countryCode );
 		const countryStates = State.getStatesOfCountry( countryCode );
 		setCountryCode( countryCode );
+		const flagCode = countryPhoneCode.toLowerCase();
+		setFlagCode( flagCode );
 		
 		setStates( countryStates );		
-		setFlagSrc( './img/flags/' + countryCode + '.svg' );
+		setFlagSrc( './img/flags/' + flagCode + '.svg' );
 		
 		const country = countries.filter( country => country.isoCode == countryCode );
 		const countryPhoneCode = country[0].phonecode;
 	
 		setCountryError( '' );
-	
-		setCountryPhoneCode( countryPhoneCode )
+
+		setCountryPhoneCode( countryPhoneCode );
 		
 		setStateSelected( '' );
 		setCitySelected( '' );
@@ -352,12 +357,23 @@ console.log( 'fileList', fileList );
 		}
 		// picture
 		if( fileList.length ){
-			// 
+			
 			const fileObj = fileList[0];
+console.log( 'fileObj', fileObj );
+			// check extension
 			const ext = fileObj.type.replaceAll( 'image/', '' );
 			const exts = props.accept.replaceAll( '.', '' ).replaceAll( 'image/', '' ).split( ',' );
 			if( !exts.includes( ext ) ){
 				const error = 'Your picture\'s file type is not correct';
+				setPictureError( error );
+				// setErrorsExist( true )
+				errorsExist = true
+			}
+			
+			// check size
+			const size = fileObj.size;
+			if( size > profilePicSizeLimit  ){
+				const error = 'Your image file must be less than 2MB';
 				setPictureError( error );
 				// setErrorsExist( true )
 				errorsExist = true
@@ -485,7 +501,7 @@ console.log( 'fileList', fileList );
 	const [ recaptchaValue, setRecaptchaValue ] = useState( false );
 	const onRecaptchaChange = ( value ) => {
 		if( !value )
-			setLoginSpin( false )
+			setLoginSpin( 'none' )
 		else
 			setRecaptchaValue( true );
 		// console.log("Captcha value:", value);
@@ -536,8 +552,11 @@ console.log( 'fileList', fileList );
 				// Phone
 				setPhoneNumber( profile.phone );
 				// Country flag
+				const flagCode = countryObj.isoCode.toLowerCase();
+				setFlagCode( flagCode );
+				
 				if( countryObj ) 
-					setFlagSrc( './img/flags/' + countryObj.isoCode + '.svg' )
+					setFlagSrc( './img/flags/' + flagCode + '.svg' )
 				// Country States
 				if( countryObj ){ 
 					setStateSelected( profile.state );
@@ -947,7 +966,7 @@ console.log( 'fileList', fileList );
 										>
 											<Dragger {...props} >
 												<p className="ant-upload-drag-icon">
-													Your picture<br/>.png and jpg only<br/>
+													Click or drag your picture<br/>.png and jpg only<br/>
 												</p>
 											</Dragger>
 										</Form.Item>
